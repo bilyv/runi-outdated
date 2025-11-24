@@ -2,7 +2,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onSwitchToSignUp: () => void, onSwitchToForgotPassword: () => void }) {
+export function ForgotPasswordForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
     const { signIn } = useAuthActions();
     const [loading, setLoading] = useState(false);
 
@@ -11,14 +11,14 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
         setLoading(true);
 
         try {
-            // Sign in with business email and password
             const formData = new FormData(event.currentTarget);
-            formData.append("flow", "signIn");
+            formData.append("flow", "reset");
             await signIn("password", formData);
-            toast.success("Signed in successfully!");
+            toast.success("Password reset link sent! Check your email.");
+            onSwitchToSignIn();
         } catch (error) {
             console.error("Authentication error:", error);
-            toast.error("Invalid business email or password. Please try again.");
+            toast.error("Failed to send reset link. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -28,47 +28,26 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
         <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="mb-4">
                 <h2 className="text-xl font-bold text-gray-900 text-center">
-                    Sign In
+                    Reset Password
                 </h2>
+                <p className="text-sm text-gray-500 text-center mt-1">
+                    Enter your email to receive a password reset link
+                </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="businessEmail" className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
                         Business Email
                     </label>
                     <input
                         type="email"
-                        id="businessEmail"
-                        name="businessEmail"
+                        id="email"
+                        name="email"
                         className="auth-input-field text-sm"
                         placeholder="your@business.com"
                         required
                     />
-                </div>
-
-                <div>
-                    <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
-                        Password
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        className="auth-input-field text-sm"
-                        placeholder="Enter your password"
-                        required
-                    />
-                </div>
-
-                <div className="flex justify-end">
-                    <button
-                        type="button"
-                        onClick={onSwitchToForgotPassword}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                        Forgot Password?
-                    </button>
                 </div>
 
                 <button
@@ -77,18 +56,18 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
                     disabled={loading}
                 >
                     {loading
-                        ? "Processing..."
-                        : "Sign In"}
+                        ? "Sending..."
+                        : "Send Reset Link"}
                 </button>
             </form>
 
             <div className="mt-4 text-center">
                 <button
                     type="button"
-                    onClick={onSwitchToSignUp}
+                    onClick={onSwitchToSignIn}
                     className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                 >
-                    Don't have an account? Sign up
+                    Back to Sign In
                 </button>
             </div>
         </div>

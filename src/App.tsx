@@ -2,19 +2,26 @@ import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
 import { SignUpForm } from "./SignUpForm";
+import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { BusinessDashboard } from "./components/BusinessDashboard";
 import { useState } from "react";
 
 export default function App() {
-  const [authView, setAuthView] = useState<'signIn' | 'signUp'>('signIn');
+  const [authView, setAuthView] = useState<'signIn' | 'signUp' | 'forgotPassword'>('signIn');
 
   const AuthForm = () => {
     if (authView === 'signUp') {
       return <SignUpForm onSwitchToSignIn={() => setAuthView('signIn')} />;
     }
-    return <SignInForm onSwitchToSignUp={() => setAuthView('signUp')} />;
+    if (authView === 'forgotPassword') {
+      return <ForgotPasswordForm onSwitchToSignIn={() => setAuthView('signIn')} />;
+    }
+    return <SignInForm
+      onSwitchToSignUp={() => setAuthView('signUp')}
+      onSwitchToForgotPassword={() => setAuthView('forgotPassword')}
+    />;
   };
 
   return (

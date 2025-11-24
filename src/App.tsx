@@ -1,11 +1,22 @@
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
+import { SignUpForm } from "./SignUpForm";
 import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { BusinessDashboard } from "./components/BusinessDashboard";
+import { useState } from "react";
 
 export default function App() {
+  const [authView, setAuthView] = useState<'signIn' | 'signUp'>('signIn');
+
+  const AuthForm = () => {
+    if (authView === 'signUp') {
+      return <SignUpForm onSwitchToSignIn={() => setAuthView('signIn')} />;
+    }
+    return <SignInForm onSwitchToSignUp={() => setAuthView('signUp')} />;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Authenticated>
@@ -19,7 +30,7 @@ export default function App() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Manager</h1>
               <p className="text-gray-600">Manage your business operations efficiently</p>
             </div>
-            <SignInForm />
+            <AuthForm />
           </div>
         </div>
       </Unauthenticated>

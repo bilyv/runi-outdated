@@ -13,6 +13,7 @@ export function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void 
         try {
             // Sign in with business email and password
             const formData = new FormData(event.currentTarget);
+            formData.append("flow", "signIn");
             await signIn("password", formData);
             toast.success("Signed in successfully!");
         } catch (error) {
@@ -22,8 +23,6 @@ export function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void 
             setLoading(false);
         }
     };
-
-
 
     return (
         <div className="bg-white rounded-xl shadow-sm p-6">

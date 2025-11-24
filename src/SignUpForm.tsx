@@ -6,7 +6,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
     const { signIn } = useAuthActions();
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1); // Multi-step signup
-    
+
     // Form data state
     const [formData, setFormData] = useState({
         businessName: "",
@@ -49,8 +49,9 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
             signUpData.append("fullName", formData.fullName);
             signUpData.append("phoneNumber", formData.phoneNumber);
             signUpData.append("password", formData.password);
-            
+
             // Sign up with business information
+            signUpData.append("flow", "signUp");
             await signIn("password", signUpData);
             toast.success("Account created successfully!");
         } catch (error) {
@@ -73,7 +74,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                 <h3 className="text-lg font-semibold text-gray-900">Business Information</h3>
                 <p className="text-sm text-gray-500 mt-1">Let's start by knowing your business name</p>
             </div>
-            
+
             <div>
                 <label htmlFor="businessName" className="block text-xs font-medium text-gray-700 mb-1">
                     Business Name
@@ -104,7 +105,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                 <h3 className="text-lg font-semibold text-gray-900">Business Email</h3>
                 <p className="text-sm text-gray-500 mt-1">We'll use this to contact your business</p>
             </div>
-            
+
             <div>
                 <label htmlFor="businessEmail" className="block text-xs font-medium text-gray-700 mb-1">
                     Business Email
@@ -135,7 +136,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                 <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
                 <p className="text-sm text-gray-500 mt-1">Tell us about yourself</p>
             </div>
-            
+
             <div>
                 <label htmlFor="fullName" className="block text-xs font-medium text-gray-700 mb-1">
                     Full Name
@@ -151,7 +152,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                     required
                 />
             </div>
-            
+
             <div>
                 <label htmlFor="phoneNumber" className="block text-xs font-medium text-gray-700 mb-1">
                     Phone Number
@@ -182,7 +183,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                 <h3 className="text-lg font-semibold text-gray-900">Create Password</h3>
                 <p className="text-sm text-gray-500 mt-1">Secure your account with a strong password</p>
             </div>
-            
+
             <div>
                 <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
                     Password
@@ -198,7 +199,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                     required
                 />
             </div>
-            
+
             <div>
                 <label htmlFor="confirmPassword" className="block text-xs font-medium text-gray-700 mb-1">
                     Confirm Password
@@ -225,8 +226,8 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                 <span className="text-xs font-medium text-gray-500">{Math.round((step / 4) * 100)}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div 
-                    className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out" 
+                <div
+                    className="bg-primary h-1.5 rounded-full transition-all duration-300 ease-in-out"
                     style={{ width: `${(step / 4) * 100}%` }}
                 ></div>
             </div>
@@ -243,13 +244,13 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <ProgressBar />
-                
+
                 {/* Render the current step */}
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
                 {step === 4 && renderStep4()}
-                
+
                 {/* Navigation buttons */}
                 <div className="flex justify-between pt-2">
                     {step > 1 && (
@@ -261,7 +262,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                             Back
                         </button>
                     )}
-                    
+
                     {step < 4 ? (
                         <button
                             type="button"
@@ -280,7 +281,7 @@ export function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void 
                         </button>
                     )}
                 </div>
-                
+
                 {/* Password confirmation error */}
                 {step === 4 && formData.password !== formData.confirmPassword && (
                     <div className="text-red-500 text-xs text-center">

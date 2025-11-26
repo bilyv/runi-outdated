@@ -7,7 +7,7 @@ import {
   TrendingUp,
   UserCheck,
   Settings as SettingsIcon,
-  LogOut
+  X
 } from "lucide-react";
 import { ModuleType } from "./BusinessDashboard";
 import { SignOutButton } from "../SignOutButton";
@@ -30,12 +30,14 @@ const modules = [
 
 export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
   return (
-    <div className="w-64 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border-r border-gray-200 dark:border-dark-border flex flex-col">
-      <div className="p-6 border-b border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-md">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text">Runi</h1>
+    <div className="w-64 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border-r border-gray-200 dark:border-dark-border flex flex-col h-full">
+      <div className="p-4 md:p-6 border-b border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-md">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text">Runi</h1>
+        </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {modules.map((module) => {
           const Icon = module.icon;
           const isActive = activeModule === module.id;

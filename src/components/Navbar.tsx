@@ -1,4 +1,4 @@
-import { UserCircle, Bell, Search } from "lucide-react";
+import { UserCircle, Search } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
@@ -6,9 +6,10 @@ export function Navbar() {
     const { theme, toggleTheme } = useTheme();
 
     return (
-        <div className="h-16 px-6 flex items-center justify-between bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border sticky top-0 z-10">
+        <div className="h-16 px-4 md:px-6 flex items-center justify-between bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border-b border-gray-200 dark:border-dark-border sticky top-0 z-10">
             <div className="flex items-center gap-4 flex-1">
-                <div className="relative w-96">
+                {/* Search bar - hidden on mobile, visible on md and larger */}
+                <div className="hidden md:block relative w-96">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-text" size={20} />
                     <input
                         type="text"
@@ -24,11 +25,6 @@ export function Navbar() {
                     className="p-2 text-gray-500 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card rounded-full transition-colors"
                 >
                     {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-
-                <button className="p-2 text-gray-500 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card rounded-full transition-colors relative">
-                    <Bell size={20} />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
 
                 <div className="h-8 w-px bg-gray-200 dark:bg-dark-border mx-2"></div>

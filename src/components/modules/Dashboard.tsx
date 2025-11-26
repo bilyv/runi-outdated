@@ -1,10 +1,10 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
-import { 
-  ShoppingCart, 
-  DollarSign, 
-  TrendingUp, 
+
+import {
+  ShoppingCart,
+  DollarSign,
+  TrendingUp,
   Receipt,
   AlertTriangle,
   Plus,
@@ -14,8 +14,7 @@ import { StatCard } from "../ui/StatCard";
 import { Button } from "../ui/Button";
 
 export function Dashboard() {
-  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
-  const stats = useQuery(api.dashboard.getStats, { period });
+  const stats = useQuery(api.dashboard.getStats, { period: "monthly" });
 
   if (!stats) {
     return (
@@ -35,22 +34,7 @@ export function Dashboard() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <div className="flex gap-2">
-          {(["daily", "weekly", "monthly"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                period === p
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {p.charAt(0).toUpperCase() + p.slice(1)}
-            </button>
-          ))}
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Dashboard</h1>
       </div>
 
       {/* Stats Cards */}
@@ -82,8 +66,8 @@ export function Dashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+      <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">Quick Actions</h2>
         <div className="flex gap-4">
           <Button variant="primary" className="flex items-center gap-2">
             <Plus size={16} />
@@ -99,26 +83,26 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Low Stock Alert */}
         {stats.lowStockCount > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-6">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="text-amber-500" size={20} />
-              <h2 className="text-lg font-semibold text-gray-900">Stock Alerts</h2>
-              <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Stock Alerts</h2>
+              <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 text-xs px-2 py-1 rounded-full">
                 {stats.lowStockCount}
               </span>
             </div>
             <div className="space-y-3">
               {stats.lowStockProducts.map((product) => (
-                <div key={product._id} className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
+                <div key={product._id} className="flex justify-between items-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-600">SKU: {product.sku}</p>
+                    <p className="font-medium text-gray-900 dark:text-dark-text">{product.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">SKU: {product.sku}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-amber-700">
+                    <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
                       {product.stock} left
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Min: {product.minStock}
                     </p>
                   </div>
@@ -129,26 +113,25 @@ export function Dashboard() {
         )}
 
         {/* Recent Sales */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Sales</h2>
+        <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">Recent Sales</h2>
           <div className="space-y-3">
             {stats.recentSales.map((sale) => (
-              <div key={sale._id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <div key={sale._id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-dark-card/50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">{sale.customerName}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-gray-900 dark:text-dark-text">{sale.customerName}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {new Date(sale._creationTime).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-gray-900">${sale.total.toFixed(2)}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    sale.status === "completed" 
-                      ? "bg-green-100 text-green-800"
-                      : sale.status === "partial"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
-                  }`}>
+                  <p className="font-medium text-gray-900 dark:text-dark-text">${sale.total.toFixed(2)}</p>
+                  <span className={`text-xs px-2 py-1 rounded-full ${sale.status === "completed"
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
+                    : sale.status === "partial"
+                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
+                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
+                    }`}>
                     {sale.status}
                   </span>
                 </div>

@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -12,6 +13,12 @@ export default {
           hover: '#2563eb',
         },
         secondary: '#64748b',
+        dark: {
+          bg: '#1e1e1e',
+          card: '#2d2d2d',
+          border: '#3d3d3d',
+          text: '#e0e0e0',
+        }
       },
       spacing: {
         'section': '2rem',

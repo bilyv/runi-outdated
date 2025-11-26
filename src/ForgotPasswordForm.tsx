@@ -25,26 +25,26 @@ export function ForgotPasswordForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm p-6">
             <div className="mb-4">
-                <h2 className="text-xl font-bold text-gray-900 text-center">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text text-center">
                     Reset Password
                 </h2>
-                <p className="text-sm text-gray-500 text-center mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-1">
                     Enter your email to receive a password reset link
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="email" className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
                         Business Email
                     </label>
                     <input
                         type="email"
                         id="email"
                         name="email"
-                        className="auth-input-field text-sm"
+                        className="auth-input-field text-sm dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
                         placeholder="your@business.com"
                         required
                     />
@@ -65,7 +65,7 @@ export function ForgotPasswordForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
                 <button
                     type="button"
                     onClick={onSwitchToSignIn}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                 >
                     Back to Sign In
                 </button>

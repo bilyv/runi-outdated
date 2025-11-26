@@ -7,6 +7,7 @@ import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { BusinessDashboard } from "./components/BusinessDashboard";
 import { useState } from "react";
+import { ThemeProvider } from "./components/ThemeProvider";
 
 export default function App() {
   const [authView, setAuthView] = useState<'signIn' | 'signUp' | 'forgotPassword'>('signIn');
@@ -25,24 +26,26 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Authenticated>
-        <BusinessDashboard />
-      </Authenticated>
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg dark:text-dark-text">
+        <Authenticated>
+          <BusinessDashboard />
+        </Authenticated>
 
-      <Unauthenticated>
-        <div className="min-h-screen flex items-center justify-center p-4">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Manager</h1>
-              <p className="text-gray-600">Manage your business operations efficiently</p>
+        <Unauthenticated>
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Manager</h1>
+                <p className="text-gray-600">Manage your business operations efficiently</p>
+              </div>
+              <AuthForm />
             </div>
-            <AuthForm />
           </div>
-        </div>
-      </Unauthenticated>
+        </Unauthenticated>
 
-      <Toaster />
-    </div>
+        <Toaster />
+      </div>
+    </ThemeProvider>
   );
 }

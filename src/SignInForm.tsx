@@ -25,37 +25,37 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm p-6">
             <div className="mb-4">
-                <h2 className="text-xl font-bold text-gray-900 text-center">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text text-center">
                     Sign In
                 </h2>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="businessEmail" className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="businessEmail" className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
                         Business Email
                     </label>
                     <input
                         type="email"
                         id="businessEmail"
                         name="businessEmail"
-                        className="auth-input-field text-sm"
+                        className="auth-input-field text-sm dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
                         placeholder="your@business.com"
                         required
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="password" className="block text-xs font-medium text-gray-700 mb-1">
+                    <label htmlFor="password" className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
                         Password
                     </label>
                     <input
                         type="password"
                         id="password"
                         name="password"
-                        className="auth-input-field text-sm"
+                        className="auth-input-field text-sm dark:bg-dark-card dark:text-dark-text dark:border-dark-border"
                         placeholder="Enter your password"
                         required
                     />
@@ -65,7 +65,7 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
                     <button
                         type="button"
                         onClick={onSwitchToForgotPassword}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                     >
                         Forgot Password?
                     </button>
@@ -86,7 +86,7 @@ export function SignInForm({ onSwitchToSignUp, onSwitchToForgotPassword }: { onS
                 <button
                     type="button"
                     onClick={onSwitchToSignUp}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                 >
                     Don't have an account? Sign up
                 </button>

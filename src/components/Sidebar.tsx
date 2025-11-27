@@ -33,8 +33,11 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
     <div className="w-64 bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border-r border-gray-200 dark:border-dark-border flex flex-col h-full">
       <div className="p-4 md:p-6 border-b border-gray-200 dark:border-dark-border bg-white/80 dark:bg-dark-card/80 backdrop-blur-md">
         <div className="flex items-center justify-between">
-          {/* Application name - only visible on mobile */}
-          <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text md:hidden">Runi</h1>
+          {/* Application name - visible on both mobile and desktop */}
+          <div className="flex items-center gap-2">
+            <img src="/logo.svg" alt="Runi Logo" className="w-8 h-8" />
+            <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text">Runi</h1>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
-# Business Manager
+# Runi
 
-A comprehensive business management application built with modern web technologies. This project serves as a robust template for managing various aspects of a business, including inventory, sales, customers, and expenses.
+Runi is a comprehensive business management application built with modern web technologies. This project serves as a robust template for managing various aspects of a business, including inventory, sales, customers, and expenses.
 
 ## 🚀 Features
 

@@ -11,7 +11,7 @@ import {
   Banknote
 } from "lucide-react";
 import { ModuleType } from "./BusinessDashboard";
-import { SignOutButton } from "../SignOutButton";
+import { SignOutButton } from "../../features/auth/SignOutButton";
 
 interface SidebarProps {
   activeModule: ModuleType;

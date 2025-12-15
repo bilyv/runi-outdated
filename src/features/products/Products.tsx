@@ -2,9 +2,9 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState } from "react";
 import { Plus, Search, Filter, Package, AlertTriangle, Edit, Trash2 } from "lucide-react";
-import { Button } from "../ui/Button";
-import { Modal } from "../ui/Modal";
-import { Input } from "../ui/Input";
+import { Button } from "../../components/ui/Button";
+import { Modal } from "../../components/ui/Modal";
+import { Input } from "../../components/ui/Input";
 import { toast } from "sonner";
 
 type TabType = "category" | "adding" | "liveStock";
@@ -56,10 +56,10 @@ export function Products() {
   // Determine animation direction
   const getAnimationClass = (tabId: TabType) => {
     if (tabId !== activeTab) return "hidden";
-    
+
     const tabIndex = tabs.findIndex(t => t.id === tabId);
     const prevTabIndex = tabs.findIndex(t => t.id === prevTab);
-    
+
     if (tabIndex > prevTabIndex) {
       return "animate-fadeInRight";
     } else if (tabIndex < prevTabIndex) {
@@ -91,11 +91,10 @@ export function Products() {
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id as TabType)}
-              className={`px-6 py-4 text-sm font-medium relative transition-all duration-300 ease-in-out ${
-                activeTab === tab.id
+              className={`px-6 py-4 text-sm font-medium relative transition-all duration-300 ease-in-out ${activeTab === tab.id
                   ? "text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/10"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-dark-card/50"
-              }`}
+                }`}
               style={{
                 borderTopLeftRadius: tab.id === tabs[0].id ? '0.75rem' : '0',
                 borderTopRightRadius: tab.id === tabs[tabs.length - 1].id ? '0.75rem' : '0'

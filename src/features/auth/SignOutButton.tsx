@@ -1,7 +1,7 @@
 "use client";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
-import { useCurrentUser } from "./lib/utils";
+import { useCurrentUser } from "../../lib/utils";
 
 export function SignOutButton() {
   const { isAuthenticated } = useConvexAuth();
@@ -14,7 +14,7 @@ export function SignOutButton() {
 
   // Get user's full name or fallback to email
   const fullName = user?.fullName || user?.businessName || user?.email || "User";
-  
+
   // Extract initials from the full name
   const getInitials = (name: string) => {
     return name
@@ -37,7 +37,7 @@ export function SignOutButton() {
         </div>
         <span className="truncate text-sm">{fullName}</span>
       </div>
-      <button 
+      <button
         className="text-sm hover:bg-gray-100 dark:hover:bg-dark-card/50 rounded px-2 py-1 transition-colors"
         onClick={() => void signOut()}
       >

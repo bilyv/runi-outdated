@@ -25,7 +25,7 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
-import { StatCard } from "../ui/StatCard";
+import { StatCard } from "../../components/ui/StatCard";
 
 // Define the type for our stat cards
 type StatCardData = {
@@ -220,14 +220,14 @@ export function Dashboard() {
       {/* Charts Section */}
       <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text mb-6">Financial Overview</h2>
-        
+
         {/* Desktop Layout - 3-column grid */}
         <div className="hidden md:grid grid-cols-3 gap-6">
           {/* Revenue Chart - 2 columns */}
           <div className="col-span-2">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Revenue Chart</h3>
-              <select 
+              <select
                 value={chartPeriod}
                 onChange={(e) => setChartPeriod(e.target.value as ChartPeriod)}
                 className="px-3 py-1 border border-gray-300 dark:border-dark-border rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text"
@@ -245,12 +245,12 @@ export function Dashboard() {
                 >
                   <defs>
                     <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" />
@@ -277,7 +277,7 @@ export function Dashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-          
+
           {/* Financial Overview - 1 column */}
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">Financial Distribution</h3>
@@ -304,7 +304,7 @@ export function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            
+
             {/* Center display for total value */}
             <div className="text-center mt-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">Total Value</p>
@@ -312,7 +312,7 @@ export function Dashboard() {
                 ${financialTotal.toFixed(2)}
               </p>
             </div>
-            
+
             {/* Summary: Net Positive vs Total Costs */}
             <div className="mt-6 pt-4 border-t border-gray-200 dark:border-dark-border">
               <div className="flex justify-between">
@@ -332,7 +332,7 @@ export function Dashboard() {
             </div>
           </div>
         </div>
-        
+
         {/* Mobile Layout - Slideshow */}
         <div className="md:hidden">
           {/* Chart display */}
@@ -342,7 +342,7 @@ export function Dashboard() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Revenue Chart</h3>
-                  <select 
+                  <select
                     value={chartPeriod}
                     onChange={(e) => setChartPeriod(e.target.value as ChartPeriod)}
                     className="px-2 py-1 text-sm border border-gray-300 dark:border-dark-border rounded bg-white dark:bg-dark-card text-gray-900 dark:text-dark-text"
@@ -359,12 +359,12 @@ export function Dashboard() {
                   >
                     <defs>
                       <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorInvestment" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="name" />
@@ -413,7 +413,7 @@ export function Dashboard() {
                     <Tooltip content={<CustomPieTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
-                
+
                 {/* Center display for total value */}
                 <div className="text-center mt-2">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Total Value</p>
@@ -424,7 +424,7 @@ export function Dashboard() {
               </div>
             )}
           </div>
-          
+
           {/* Navigation */}
           <div className="flex justify-between items-center">
             {/* Dots indicator */}
@@ -433,15 +433,14 @@ export function Dashboard() {
                 <button
                   key={index}
                   onClick={() => setActiveChart(index)}
-                  className={`w-2 h-2 rounded-full ${
-                    activeChart === index 
-                      ? 'bg-blue-600 dark:bg-blue-400' 
+                  className={`w-2 h-2 rounded-full ${activeChart === index
+                      ? 'bg-blue-600 dark:bg-blue-400'
                       : 'bg-gray-300 dark:bg-gray-600'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
-            
+
             {/* Arrow buttons */}
             <div className="flex space-x-4">
               <button
@@ -458,7 +457,7 @@ export function Dashboard() {
               </button>
             </div>
           </div>
-          
+
           {/* Summary for mobile */}
           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-dark-border">
             <div className="flex justify-between">

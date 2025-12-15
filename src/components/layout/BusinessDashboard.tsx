@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { Dashboard } from "./modules/Dashboard";
-import { Products } from "./modules/Products";
-import { Sales } from "./modules/Sales";
-import { Expenses } from "./modules/Expenses";
-import { Documents } from "./modules/Documents";
-import { Reports } from "./modules/Reports";
-import { Users } from "./modules/Users";
-import { Settings } from "./modules/Settings";
-import { Transactions } from "./modules/Transactions";
+import { Dashboard } from "../../features/dashboard/Dashboard";
+import { Products } from "../../features/products/Products";
+import { Sales } from "../../features/sales/Sales";
+import { Expenses } from "../../features/expenses/Expenses";
+import { Documents } from "../../features/documents/Documents";
+import { Reports } from "../../features/reports/Reports";
+import { Users } from "../../features/users/Users";
+import { Settings } from "../../features/settings/Settings";
+import { Transactions } from "../../features/transactions/Transactions";
 
 export type ModuleType =
   | "dashboard"

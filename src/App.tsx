@@ -1,11 +1,11 @@
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { SignInForm } from "./SignInForm";
-import { SignUpForm } from "./SignUpForm";
-import { ForgotPasswordForm } from "./ForgotPasswordForm";
-import { SignOutButton } from "./SignOutButton";
+import { SignInForm } from "./features/auth/SignInForm";
+import { SignUpForm } from "./features/auth/SignUpForm";
+import { ForgotPasswordForm } from "./features/auth/ForgotPasswordForm";
+import { SignOutButton } from "./features/auth/SignOutButton";
 import { Toaster } from "sonner";
-import { BusinessDashboard } from "./components/BusinessDashboard";
+import { BusinessDashboard } from "./components/layout/BusinessDashboard";
 import { useState } from "react";
 import { ThemeProvider } from "./components/ThemeProvider";
 

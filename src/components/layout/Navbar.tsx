@@ -1,8 +1,8 @@
 import { UserCircle } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
+import { useTheme } from "../ThemeProvider";
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 
 export function Navbar() {
     const { theme, toggleTheme } = useTheme();
@@ -15,7 +15,7 @@ export function Navbar() {
             </div>
 
             <div className="flex items-center gap-2">
-                <button 
+                <button
                     onClick={toggleTheme}
                     className="p-1.5 text-gray-500 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card rounded-full transition-colors"
                 >

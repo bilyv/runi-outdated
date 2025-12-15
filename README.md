@@ -4,14 +4,16 @@ Runi is a comprehensive business management application built with modern web te
 
 ## 🚀 Features
 
-- **Dashboard**: Overview of business performance.
-- **Product Management**: Track inventory, pricing, and product details.
-- **Customer CRM**: Manage customer profiles, contact info, and balances.
-- **Supplier Management**: Keep track of suppliers and payment terms.
-- **Sales & Orders**: Process sales, track status, and manage payments.
-- **Expense Tracking**: Record and categorize business expenses.
-- **Document Management**: Store and organize business documents.
-- **Authentication**: Secure sign-in and user management via Convex Auth.
+- **Dashboard**: Real-time overview of business performance and metrics.
+- **Products**: Comprehensive inventory management (add, edit, tracking).
+- **Sales**: Process and track sales orders.
+- **Expenses**: Record and categorize business expenses.
+- **Documents**: File management system for business records.
+- **Reports**: Data visualization and business analytics.
+- **Users**: Manage team members, roles, and permissions.
+- **Settings**: Application configuration and preferences.
+- **Transactions**: Financial history and transaction logs.
+- **Authentication**: Secure sign-in and session management via Convex Auth.
 
 ## 🛠️ Tech Stack
 
@@ -28,17 +30,25 @@ Runi is a comprehensive business management application built with modern web te
 ## 📂 Project Structure
 
 ```
-├── convex/              # Backend code (Schema, API functions, Auth)
-│   ├── schema.ts        # Database schema definition
-│   ├── auth.ts          # Authentication logic
-│   └── ...              # Domain-specific modules (products, sales, etc.)
-├── src/                 # Frontend source code
-│   ├── components/      # React components
-│   ├── lib/             # Utility functions
-│   ├── App.tsx          # Main application component
-│   └── main.tsx         # Entry point
-├── public/              # Static assets
-└── package.json         # Project dependencies and scripts
+├── convex/               # Backend code (Schema, API functions, Auth)
+│   ├── schema.ts         # Database schema definition
+│   ├── auth.ts           # Authentication logic
+│   └── ...               # Context-specific API modules (products, sales, etc.)
+├── src/                  # Frontend source code
+│   ├── components/       # Shared UI components
+│   │   ├── layout/       # App shell, Sidebar, Navbar
+│   │   └── ui/           # Reusable design system components
+│   ├── features/         # Feature-based architecture
+│   │   ├── auth/         # Authentication flows
+│   │   ├── dashboard/    # Dashboard widgets
+│   │   ├── products/     # Product management
+│   │   ├── sales/        # Sales operations
+│   │   ├── ...           # Other domain features (users, settings, etc.)
+│   ├── lib/              # Utility functions and types
+│   ├── App.tsx           # Main application component
+│   └── main.tsx          # Application entry point
+├── public/               # Static assets
+└── package.json          # Project dependencies and scripts
 ```
 
 ## ⚡ Getting Started

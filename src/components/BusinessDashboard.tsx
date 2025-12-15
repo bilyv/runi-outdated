@@ -9,7 +9,6 @@ import { Reports } from "./modules/Reports";
 import { Users } from "./modules/Users";
 import { Settings } from "./modules/Settings";
 import { Transactions } from "./modules/Transactions";
-import { Suppliers } from "./modules/Suppliers";
 
 export type ModuleType =
   | "dashboard"
@@ -20,11 +19,10 @@ export type ModuleType =
   | "reports"
   | "users"
   | "settings"
-  | "transactions"
-  | "suppliers";
+  | "transactions";
 
 import { Navbar } from "./Navbar";
-import { BarChart3, Package, ShoppingCart, Menu, Banknote, Truck } from "lucide-react";
+import { BarChart3, Package, ShoppingCart, Menu, Banknote } from "lucide-react";
 
 export function BusinessDashboard() {
   const [activeModule, setActiveModule] = useState<ModuleType>("dashboard");
@@ -50,8 +48,6 @@ export function BusinessDashboard() {
         return <Settings />;
       case "transactions":
         return <Transactions />;
-      case "suppliers":
-        return <Suppliers />;
       default:
         return <Dashboard />;
     }
@@ -74,45 +70,44 @@ export function BusinessDashboard() {
           if (window.innerWidth < 768) setSidebarOpen(false);
         }} />
       </div>
-      
+
       {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 transition-opacity"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}
-      
+
       {/* Main content */}
       <main className="flex-1 flex flex-col overflow-auto md:ml-0">
         <Navbar />
         <div className="flex-1 overflow-auto">
           {renderModule()}
         </div>
-        
+
         {/* Bottom Navigation for mobile */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border z-10">
           <div className="flex justify-around items-center py-2">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeModule === item.id;
-              
+
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveModule(item.id as ModuleType)}
-                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg ${
-                    isActive 
-                      ? "text-blue-600 dark:text-blue-400" 
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
+                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg ${isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400"
+                    }`}
                 >
                   <Icon size={20} />
                   <span className="text-xs mt-1">{item.label}</span>
                 </button>
               );
             })}
-            
+
             {/* More button to open sidebar */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -123,7 +118,7 @@ export function BusinessDashboard() {
             </button>
           </div>
         </div>
-        
+
         {/* Add padding to content to prevent overlap with bottom nav */}
         <div className="md:hidden h-16"></div>
       </main>

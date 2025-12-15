@@ -36,34 +36,10 @@ const applicationTables = {
     .index("by_category", ["category"])
     .index("by_stock", ["stock"]),
 
-  // Customers
-  customers: defineTable({
-    name: v.string(),
-    email: v.optional(v.string()),
-    phone: v.optional(v.string()),
-    address: v.optional(v.string()),
-    balance: v.number(),
-    isActive: v.boolean(),
-    notes: v.optional(v.string()),
-  })
-    .index("by_email", ["email"])
-    .index("by_balance", ["balance"]),
 
-  // Suppliers
-  suppliers: defineTable({
-    name: v.string(),
-    email: v.optional(v.string()),
-    phone: v.optional(v.string()),
-    address: v.optional(v.string()),
-    category: v.string(),
-    paymentTerms: v.optional(v.string()),
-    isActive: v.boolean(),
-  })
-    .index("by_category", ["category"]),
 
   // Sales
   sales: defineTable({
-    customerId: v.optional(v.id("customers")),
     customerName: v.string(),
     items: v.array(v.object({
       productId: v.id("products"),
@@ -80,7 +56,6 @@ const applicationTables = {
     paymentMethod: v.optional(v.string()),
     notes: v.optional(v.string()),
   })
-    .index("by_customer", ["customerId"])
     .index("by_status", ["status"]),
 
   // Expenses
@@ -89,7 +64,6 @@ const applicationTables = {
     description: v.string(),
     amount: v.number(),
     paymentMethod: v.string(),
-    supplierId: v.optional(v.id("suppliers")),
     receiptUrl: v.optional(v.string()),
     notes: v.optional(v.string()),
   })

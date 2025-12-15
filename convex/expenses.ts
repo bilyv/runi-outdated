@@ -13,7 +13,7 @@ export const list = query({
     if (!userId) throw new Error("Not authenticated");
 
     let expenses;
-    
+
     if (args.category) {
       expenses = await ctx.db
         .query("expenses")
@@ -23,7 +23,7 @@ export const list = query({
     } else {
       expenses = await ctx.db.query("expenses").order("desc").collect();
     }
-    
+
     if (args.startDate || args.endDate) {
       expenses = expenses.filter(expense => {
         if (args.startDate && expense._creationTime < args.startDate) return false;
@@ -31,7 +31,7 @@ export const list = query({
         return true;
       });
     }
-    
+
     return expenses;
   },
 });
@@ -42,7 +42,6 @@ export const create = mutation({
     description: v.string(),
     amount: v.number(),
     paymentMethod: v.string(),
-    supplierId: v.optional(v.id("suppliers")),
     receiptUrl: v.optional(v.string()),
     notes: v.optional(v.string()),
   },

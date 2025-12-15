@@ -5,37 +5,29 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 export const list = query({
   args: {
     status: v.optional(v.union(v.literal("pending"), v.literal("partial"), v.literal("completed"))),
-    customerId: v.optional(v.id("customers")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     let sales;
-    
+
     if (args.status) {
       sales = await ctx.db
         .query("sales")
         .withIndex("by_status", (q) => q.eq("status", args.status!))
         .order("desc")
         .collect();
-    } else if (args.customerId) {
-      sales = await ctx.db
-        .query("sales")
-        .withIndex("by_customer", (q) => q.eq("customerId", args.customerId!))
-        .order("desc")
-        .collect();
     } else {
       sales = await ctx.db.query("sales").order("desc").collect();
     }
-    
+
     return sales;
   },
 });
 
 export const create = mutation({
   args: {
-    customerId: v.optional(v.id("customers")),
     customerName: v.string(),
     items: v.array(v.object({
       productId: v.id("products"),
@@ -65,18 +57,8 @@ export const create = mutation({
       }
     }
 
-    // Update customer balance if applicable
-    if (args.customerId && args.amountPaid < args.total) {
-      const customer = await ctx.db.get(args.customerId);
-      if (customer) {
-        await ctx.db.patch(args.customerId, {
-          balance: customer.balance + (args.total - args.amountPaid)
-        });
-      }
-    }
-
-    const status = args.amountPaid === 0 ? "pending" : 
-                  args.amountPaid < args.total ? "partial" : "completed";
+    const status = args.amountPaid === 0 ? "pending" :
+      args.amountPaid < args.total ? "partial" : "completed";
 
     return await ctx.db.insert("sales", {
       ...args,
@@ -100,16 +82,6 @@ export const addPayment = mutation({
 
     const newAmountPaid = sale.amountPaid + args.amount;
     const newStatus = newAmountPaid >= sale.total ? "completed" : "partial";
-
-    // Update customer balance
-    if (sale.customerId) {
-      const customer = await ctx.db.get(sale.customerId);
-      if (customer) {
-        await ctx.db.patch(sale.customerId, {
-          balance: Math.max(0, customer.balance - args.amount)
-        });
-      }
-    }
 
     return await ctx.db.patch(args.saleId, {
       amountPaid: newAmountPaid,
@@ -148,7 +120,7 @@ export const getStats = query({
 
     const totalSales = sales.length;
     const totalRevenue = sales.reduce((sum, sale) => sum + sale.amountPaid, 0);
-    
+
     return {
       totalSales,
       totalRevenue,

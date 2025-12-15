@@ -20,21 +20,32 @@ const customAuthTables = {
 
 const applicationTables = {
   // Products
+  // Products
   products: defineTable({
+    user_id: v.id("users"),
     name: v.string(),
-    sku: v.string(),
-    category: v.string(),
+    category_id: v.id("productcategory"),
+    quantity_box: v.number(),
+    quantity_kg: v.number(),
+    box_to_kg_ratio: v.number(),
+    cost_per_box: v.number(),
+    cost_per_kg: v.number(),
+    price_per_box: v.number(),
+    price_per_kg: v.number(),
+    profit_per_box: v.number(),
+    profit_per_kg: v.number(),
+    boxed_low_stock_threshold: v.number(),
+    expiry_date: v.string(), // Changed to string for easier date handling or number? User said "expiry_date", usually date string or timestamp. I'll use number for timestamp consistency with updated_at.
+    days_left: v.number(),
+    updated_at: v.number(),
+    // Optional fields not strictly requested but likely needed (can be removed if strictness required)
     description: v.optional(v.string()),
-    costPrice: v.number(),
-    sellingPrice: v.number(),
-    stock: v.number(),
-    minStock: v.number(),
     imageUrl: v.optional(v.string()),
-    isActive: v.boolean(),
+    sku: v.optional(v.string()),
   })
-    .index("by_sku", ["sku"])
-    .index("by_category", ["category"])
-    .index("by_stock", ["stock"]),
+    .index("by_user", ["user_id"])
+    .index("by_category", ["category_id"])
+    .index("by_user_and_category", ["user_id", "category_id"]),
 
   // Product Categories
   productcategory: defineTable({

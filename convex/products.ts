@@ -4,7 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   args: {
-    category: v.optional(v.string()),
+    category_id: v.optional(v.id("productcategory")),
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -12,23 +12,29 @@ export const list = query({
     if (!userId) throw new Error("Not authenticated");
 
     let products;
-    
-    if (args.category) {
+
+    if (args.category_id) {
       products = await ctx.db
         .query("products")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .withIndex("by_user_and_category", (q) =>
+          q.eq("user_id", userId).eq("category_id", args.category_id!)
+        )
         .collect();
     } else {
-      products = await ctx.db.query("products").collect();
+      products = await ctx.db
+        .query("products")
+        .withIndex("by_user", (q) => q.eq("user_id", userId))
+        .collect();
     }
-    
+
     if (args.search) {
-      return products.filter(p => 
-        p.name.toLowerCase().includes(args.search!.toLowerCase()) ||
-        p.sku.toLowerCase().includes(args.search!.toLowerCase())
+      const searchLower = args.search.toLowerCase();
+      return products.filter(p =>
+        p.name.toLowerCase().includes(searchLower) ||
+        (p.sku && p.sku.toLowerCase().includes(searchLower))
       );
     }
-    
+
     return products;
   },
 });
@@ -36,14 +42,22 @@ export const list = query({
 export const create = mutation({
   args: {
     name: v.string(),
-    sku: v.string(),
-    category: v.string(),
+    category_id: v.id("productcategory"),
+    quantity_box: v.number(),
+    quantity_kg: v.number(),
+    box_to_kg_ratio: v.number(),
+    cost_per_box: v.number(),
+    cost_per_kg: v.number(),
+    price_per_box: v.number(),
+    price_per_kg: v.number(),
+    profit_per_box: v.number(),
+    profit_per_kg: v.number(),
+    boxed_low_stock_threshold: v.number(),
+    expiry_date: v.string(), // Using string for date input flexibility
+    days_left: v.number(),
     description: v.optional(v.string()),
-    costPrice: v.number(),
-    sellingPrice: v.number(),
-    stock: v.number(),
-    minStock: v.number(),
     imageUrl: v.optional(v.string()),
+    sku: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -51,7 +65,8 @@ export const create = mutation({
 
     return await ctx.db.insert("products", {
       ...args,
-      isActive: true,
+      user_id: userId,
+      updated_at: Date.now(),
     });
   },
 });
@@ -60,40 +75,39 @@ export const update = mutation({
   args: {
     id: v.id("products"),
     name: v.optional(v.string()),
-    sku: v.optional(v.string()),
-    category: v.optional(v.string()),
+    category_id: v.optional(v.id("productcategory")),
+    quantity_box: v.optional(v.number()),
+    quantity_kg: v.optional(v.number()),
+    box_to_kg_ratio: v.optional(v.number()),
+    cost_per_box: v.optional(v.number()),
+    cost_per_kg: v.optional(v.number()),
+    price_per_box: v.optional(v.number()),
+    price_per_kg: v.optional(v.number()),
+    profit_per_box: v.optional(v.number()),
+    profit_per_kg: v.optional(v.number()),
+    boxed_low_stock_threshold: v.optional(v.number()),
+    expiry_date: v.optional(v.string()),
+    days_left: v.optional(v.number()),
     description: v.optional(v.string()),
-    costPrice: v.optional(v.number()),
-    sellingPrice: v.optional(v.number()),
-    stock: v.optional(v.number()),
-    minStock: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
-    isActive: v.optional(v.boolean()),
+    sku: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     const { id, ...updates } = args;
-    return await ctx.db.patch(id, updates);
-  },
-});
 
-export const adjustStock = mutation({
-  args: {
-    id: v.id("products"),
-    adjustment: v.number(),
-    reason: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    // Verify ownership
+    const product = await ctx.db.get(id);
+    if (!product || product.user_id !== userId) {
+      throw new Error("Product not found or access denied");
+    }
 
-    const product = await ctx.db.get(args.id);
-    if (!product) throw new Error("Product not found");
-
-    const newStock = Math.max(0, product.stock + args.adjustment);
-    return await ctx.db.patch(args.id, { stock: newStock });
+    return await ctx.db.patch(id, {
+      ...updates,
+      updated_at: Date.now(),
+    });
   },
 });
 
@@ -103,7 +117,26 @@ export const getLowStock = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    const products = await ctx.db.query("products").collect();
-    return products.filter(p => p.stock <= p.minStock && p.isActive);
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    return products.filter(p => p.quantity_box <= p.boxed_low_stock_threshold);
+  },
+});
+
+export const deleteProduct = mutation({
+  args: { id: v.id("products") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const product = await ctx.db.get(args.id);
+    if (!product || product.user_id !== userId) {
+      throw new Error("Product not found or access denied");
+    }
+
+    await ctx.db.delete(args.id);
   },
 });

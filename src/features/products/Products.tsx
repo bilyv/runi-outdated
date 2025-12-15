@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState } from "react";
-import { Plus, Search, Filter, Package, AlertTriangle, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Package, AlertTriangle, Edit, Trash2, Pencil } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
@@ -15,6 +15,7 @@ export function Products() {
   const [category, setCategory] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<TabType>("liveStock");
   const [prevTab, setPrevTab] = useState<TabType>("liveStock");
@@ -26,6 +27,7 @@ export function Products() {
   const categories = useQuery(api.productCategories.list) || [];
   const createProduct = useMutation(api.products.create);
   const updateProduct = useMutation(api.products.update);
+  const deleteCategory = useMutation(api.productCategories.remove);
 
   const handleSubmit = async (formData: any) => {
     try {
@@ -40,6 +42,19 @@ export function Products() {
       }
     } catch (error) {
       toast.error("Failed to save product");
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: any) => {
+    if (!confirm("Are you sure you want to delete this category?")) {
+      return;
+    }
+
+    try {
+      await deleteCategory({ id: categoryId });
+      toast.success("Category deleted successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete category");
     }
   };
 
@@ -115,6 +130,8 @@ export function Products() {
             <CategoryTab
               categories={categories}
               onAddCategory={() => setShowCategoryModal(true)}
+              onEditCategory={setEditingCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
           </div>
           <div className={`${getAnimationClass("adding")}`}>
@@ -147,10 +164,14 @@ export function Products() {
         product={editingProduct}
       />
 
-      {/* Add Category Modal */}
+      {/* Add/Edit Category Modal */}
       <AddCategoryModal
-        isOpen={showCategoryModal}
-        onClose={() => setShowCategoryModal(false)}
+        isOpen={showCategoryModal || !!editingCategory}
+        onClose={() => {
+          setShowCategoryModal(false);
+          setEditingCategory(null);
+        }}
+        category={editingCategory}
       />
     </div>
   );
@@ -284,10 +305,14 @@ function ProductModal({ isOpen, onClose, onSubmit, product }: any) {
 // Category Tab Component
 function CategoryTab({
   categories,
-  onAddCategory
+  onAddCategory,
+  onEditCategory,
+  onDeleteCategory
 }: {
   categories: Array<{ _id: any; category_name: string; _creationTime: number }>;
   onAddCategory: () => void;
+  onEditCategory: (category: any) => void;
+  onDeleteCategory: (categoryId: any) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -320,9 +345,22 @@ function CategoryTab({
                     <p className="text-sm text-gray-500 dark:text-gray-400">Category</p>
                   </div>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                  <Edit size={16} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onEditCategory(cat)}
+                    className="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                    title="Edit category"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => onDeleteCategory(cat._id)}
+                    className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    title="Delete category"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           ))

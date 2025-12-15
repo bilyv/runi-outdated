@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Modal } from "../../components/ui/Modal";
@@ -9,12 +9,23 @@ import { toast } from "sonner";
 interface AddCategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
+    category?: { _id: any; category_name: string } | null;
 }
 
-export function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
+export function AddCategoryModal({ isOpen, onClose, category }: AddCategoryModalProps) {
     const [categoryName, setCategoryName] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const createCategory = useMutation(api.productCategories.create);
+    const updateCategory = useMutation(api.productCategories.update);
+
+    // Update form when category prop changes
+    useEffect(() => {
+        if (category) {
+            setCategoryName(category.category_name);
+        } else {
+            setCategoryName("");
+        }
+    }, [category]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,12 +37,20 @@ export function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
 
         setIsSubmitting(true);
         try {
-            await createCategory({ category_name: categoryName.trim() });
-            toast.success("Category created successfully");
+            if (category) {
+                await updateCategory({
+                    id: category._id,
+                    category_name: categoryName.trim()
+                });
+                toast.success("Category updated successfully");
+            } else {
+                await createCategory({ category_name: categoryName.trim() });
+                toast.success("Category created successfully");
+            }
             setCategoryName("");
             onClose();
         } catch (error: any) {
-            toast.error(error.message || "Failed to create category");
+            toast.error(error.message || `Failed to ${category ? 'update' : 'create'} category`);
         } finally {
             setIsSubmitting(false);
         }
@@ -43,7 +62,11 @@ export function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Add Category">
+        <Modal
+            isOpen={isOpen}
+            onClose={handleClose}
+            title={category ? "Edit Category" : "Add Category"}
+        >
             <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
                     label="Category Name"
@@ -61,7 +84,10 @@ export function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
                         className="flex-1"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? "Creating..." : "Create Category"}
+                        {isSubmitting
+                            ? (category ? "Updating..." : "Creating...")
+                            : (category ? "Update Category" : "Create Category")
+                        }
                     </Button>
                     <Button
                         type="button"
@@ -76,3 +102,4 @@ export function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
         </Modal>
     );
 }
+

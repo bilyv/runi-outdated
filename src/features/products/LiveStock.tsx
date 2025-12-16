@@ -24,6 +24,18 @@ export function LiveStock({
     const damagedProducts = useQuery(api.products.getDamagedProducts) || [];
     const stockMovements = useQuery(api.products.getStockMovements) || [];
 
+    // Calculate key metrics
+    const totalInventoryValue = products?.reduce((sum, product) => 
+        sum + (product.quantity_box || 0) * (product.price_per_box || 0), 0) || 0;
+    
+    const totalCostPrice = products?.reduce((sum, product) => 
+        sum + (product.quantity_box || 0) * (product.cost_per_box || 0), 0) || 0;
+    
+    const potentialProfit = totalInventoryValue - totalCostPrice;
+    
+    const damagedValue = damagedProducts?.reduce((sum, damaged) => 
+        sum + (damaged.loss_value || 0), 0) || 0;
+
     // Helper to get category name
     const getCategoryName = (categoryId: string) => {
         return categories?.find((c: any) => c._id === categoryId)?.category_name || "Uncategorized";
@@ -550,7 +562,7 @@ export function LiveStock({
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 pb-6">
             {/* Toolbar */}
             <div className="flex gap-4 items-center">
                 <div className="flex-1 relative">
@@ -607,6 +619,30 @@ export function LiveStock({
             <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
                 <div className="overflow-x-auto">
                     {renderCurrentView()}
+                </div>
+            </div>
+
+            {/* Container-based Metrics Bar */}
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-11/12 md:w-3/4 max-w-6xl bg-white dark:bg-dark-card rounded-xl border border-gray-200 dark:border-dark-border shadow-lg z-20 transition-all duration-300">
+                <div className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 hover:shadow-md transition-all duration-300 cursor-default transform hover:-translate-y-1">
+                            <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Total Inventory Value</div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-dark-text">${totalInventoryValue.toFixed(2)}</div>
+                        </div>
+                        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 hover:shadow-md transition-all duration-300 cursor-default transform hover:-translate-y-1">
+                            <div className="text-xs text-green-600 dark:text-green-400 font-medium">Total Cost Price</div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-dark-text">${totalCostPrice.toFixed(2)}</div>
+                        </div>
+                        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 hover:shadow-md transition-all duration-300 cursor-default transform hover:-translate-y-1">
+                            <div className="text-xs text-purple-600 dark:text-purple-400 font-medium">Potential Profit</div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-dark-text">${potentialProfit.toFixed(2)}</div>
+                        </div>
+                        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 hover:shadow-md transition-all duration-300 cursor-default transform hover:-translate-y-1">
+                            <div className="text-xs text-red-600 dark:text-red-400 font-medium">Damaged Value</div>
+                            <div className="text-lg font-bold text-gray-900 dark:text-dark-text">${damagedValue.toFixed(2)}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

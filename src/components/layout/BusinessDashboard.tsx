@@ -58,7 +58,6 @@ export function BusinessDashboard() {
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "products", label: "Products", icon: Package },
     { id: "sales", label: "Sales", icon: ShoppingCart },
-    { id: "expenses", label: "Expenses", icon: Banknote },
   ];
 
   return (
@@ -88,8 +87,8 @@ export function BusinessDashboard() {
         </div>
 
         {/* Bottom Navigation for mobile */}
-        <div className="md:hidden fixed bottom-4 left-4 right-4 bg-white/90 dark:bg-dark-card/90 backdrop-blur-lg border border-gray-200/70 dark:border-dark-border/70 rounded-2xl shadow-xl shadow-gray-300/20 dark:shadow-black/30 z-10 transition-all duration-300">
-          <div className="flex justify-around items-center py-2.5 px-2">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border z-10">
+          <div className="flex justify-around items-center py-2">
             {bottomNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeModule === item.id;
@@ -98,17 +97,13 @@ export function BusinessDashboard() {
                 <button
                   key={item.id}
                   onClick={() => setActiveModule(item.id as ModuleType)}
-                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 transform ${isActive
-                    ? "text-blue-600 dark:text-blue-400 scale-105"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg ${isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400"
                     }`}
                 >
-                  <div className={`p-2.5 rounded-xl transition-all duration-300 ${isActive 
-                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/30' 
-                    : 'bg-gray-100/80 dark:bg-dark-card hover:bg-gray-200/80 dark:hover:bg-dark-card/80'}`}>
-                    <Icon size={20} />
-                  </div>
-                  <span className="text-xs mt-1.5 font-semibold tracking-tight">{item.label}</span>
+                  <Icon size={20} />
+                  <span className="text-xs mt-1">{item.label}</span>
                 </button>
               );
             })}
@@ -116,18 +111,16 @@ export function BusinessDashboard() {
             {/* More button to open sidebar */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all duration-300 group"
+              className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400"
             >
-              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-md shadow-purple-500/30 transition-transform duration-300 group-hover:scale-110">
-                <Menu size={20} />
-              </div>
-              <span className="text-xs mt-1.5 font-semibold tracking-tight">More</span>
+              <Menu size={20} />
+              <span className="text-xs mt-1">More</span>
             </button>
           </div>
         </div>
 
         {/* Add padding to content to prevent overlap with bottom nav */}
-        <div className="md:hidden h-20"></div>
+        <div className="md:hidden h-16"></div>
       </main>
     </div>
   );

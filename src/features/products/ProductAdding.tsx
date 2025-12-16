@@ -23,6 +23,8 @@ export function ProductAdding({}: ProductAddingProps) {
   const createProduct = useMutation(api.products.create);
   const updateProduct = useMutation(api.products.update);
   const restockProduct = useMutation(api.products.restock);
+  const recordDamagedProduct = useMutation(api.products.recordDamagedProduct);
+  const recordStockCorrection = useMutation(api.products.recordStockCorrection);
   
   // Add New Product Form State
   const [addProductForm, setAddProductForm] = useState({
@@ -336,36 +338,79 @@ export function ProductAdding({}: ProductAddingProps) {
   };
   
   // Handle Record Damaged Submit
-  const handleRecordDamagedSubmit = () => {
+  const handleRecordDamagedSubmit = async () => {
     if (validateRecordDamagedForm()) {
-      // In a real app, this would call a Convex mutation
-      console.log("Record Damaged Submitted:", recordDamagedForm);
-      alert("Damage recorded successfully!");
-      setIsRecordDamagedOpen(false);
-      // Reset form
-      setRecordDamagedForm({
-        product_id: "",
-        boxes_amount: "",
-        kg_amount: "",
-        reason: ""
-      });
+      try {
+        // Get the selected product to calculate loss value
+        const selectedProduct = products.find(p => p._id === recordDamagedForm.product_id);
+        const boxesAmount = Number(recordDamagedForm.boxes_amount);
+        const kgAmount = Number(recordDamagedForm.kg_amount);
+        
+        // Calculate loss value based on product cost
+        let lossValue = 0;
+        if (selectedProduct) {
+          lossValue = (boxesAmount * selectedProduct.cost_per_box) + (kgAmount * selectedProduct.cost_per_kg);
+        }
+        
+        await recordDamagedProduct({
+          damage_id: `damage_${Date.now()}`,
+          product_id: recordDamagedForm.product_id,
+          damaged_boxes: boxesAmount,
+          damaged_kg: kgAmount,
+          damage_reason: recordDamagedForm.reason,
+          damage_date: new Date().toISOString().split('T')[0],
+          loss_value: lossValue,
+          damage_approval: "pending",
+          approved_by: "",
+          approved_date: "",
+          reported_by: "User", // In a real app, this would be the actual user
+        });
+        
+        alert("Damage recorded successfully!");
+        setIsRecordDamagedOpen(false);
+        // Reset form
+        setRecordDamagedForm({
+          product_id: "",
+          boxes_amount: "",
+          kg_amount: "",
+          reason: ""
+        });
+      } catch (error: any) {
+        console.error("Error recording damaged product:", error);
+        alert("Failed to record damaged product: " + (error.message || "Unknown error"));
+      }
     }
   };
   
   // Handle Stock Correction Submit
-  const handleStockCorrectionSubmit = () => {
+  const handleStockCorrectionSubmit = async () => {
     if (validateStockCorrectionForm()) {
-      // In a real app, this would call a Convex mutation
-      console.log("Stock Correction Submitted:", stockCorrectionForm);
-      alert("Stock corrected successfully!");
-      setIsStockCorrectionOpen(false);
-      // Reset form
-      setStockCorrectionForm({
-        product_id: "",
-        boxes_amount: "",
-        kg_amount: "",
-        reason: ""
-      });
+      try {
+        const boxesAmount = Number(stockCorrectionForm.boxes_amount);
+        const kgAmount = Number(stockCorrectionForm.kg_amount);
+        
+        await recordStockCorrection({
+          correction_id: `correction_${Date.now()}`,
+          product_id: stockCorrectionForm.product_id,
+          box_adjustment: boxesAmount,
+          kg_adjustment: kgAmount,
+          status: "completed",
+          performed_by: "User", // In a real app, this would be the actual user
+        });
+        
+        alert("Stock corrected successfully!");
+        setIsStockCorrectionOpen(false);
+        // Reset form
+        setStockCorrectionForm({
+          product_id: "",
+          boxes_amount: "",
+          kg_amount: "",
+          reason: ""
+        });
+      } catch (error: any) {
+        console.error("Error recording stock correction:", error);
+        alert("Failed to record stock correction: " + (error.message || "Unknown error"));
+      }
     }
   };
   

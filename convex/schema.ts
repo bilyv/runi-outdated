@@ -150,16 +150,29 @@ const applicationTables = {
   })
     .index("by_status", ["status"]),
 
+  // Expense Categories
+  expensecategory: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    budget: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"]),
+
   // Expenses
   expenses: defineTable({
-    category: v.string(),
-    description: v.string(),
+    userId: v.id("users"),
+    title: v.string(),
+    categoryId: v.id("expensecategory"),
     amount: v.number(),
-    paymentMethod: v.string(),
-    receiptUrl: v.optional(v.string()),
-    notes: v.optional(v.string()),
+    date: v.number(),
+    addedBy: v.string(),
+    status: v.string(),
+    updatedAt: v.number(),
   })
-    .index("by_category", ["category"]),
+    .index("by_user", ["userId"])
+    .index("by_category", ["categoryId"])
+    .index("by_user_and_category", ["userId", "categoryId"]),
 
   // Documents
   documents: defineTable({

@@ -4,7 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   args: {
-    category: v.optional(v.string()),
+    categoryId: v.optional(v.id("expensecategory")),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
@@ -14,22 +14,28 @@ export const list = query({
 
     let expenses;
 
-    if (args.category) {
+    if (args.categoryId) {
       expenses = await ctx.db
         .query("expenses")
-        .withIndex("by_category", (q) => q.eq("category", args.category!))
+        .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId!))
         .order("desc")
         .collect();
     } else {
-      expenses = await ctx.db.query("expenses").order("desc").collect();
+      expenses = await ctx.db
+        .query("expenses")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .order("desc")
+        .collect();
     }
 
     if (args.startDate || args.endDate) {
-      expenses = expenses.filter(expense => {
-        if (args.startDate && expense._creationTime < args.startDate) return false;
-        if (args.endDate && expense._creationTime > args.endDate) return false;
-        return true;
-      });
+      const filteredExpenses = [];
+      for (const expense of expenses) {
+        if (args.startDate && expense.date < args.startDate) continue;
+        if (args.endDate && expense.date > args.endDate) continue;
+        filteredExpenses.push(expense);
+      }
+      expenses = filteredExpenses;
     }
 
     return expenses;
@@ -38,18 +44,30 @@ export const list = query({
 
 export const create = mutation({
   args: {
-    category: v.string(),
-    description: v.string(),
+    title: v.string(),
+    categoryId: v.id("expensecategory"),
     amount: v.number(),
-    paymentMethod: v.string(),
-    receiptUrl: v.optional(v.string()),
-    notes: v.optional(v.string()),
+    date: v.number(),
+    addedBy: v.string(),
+    status: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    return await ctx.db.insert("expenses", args);
+    const now = Date.now();
+    const expenseId = await ctx.db.insert("expenses", {
+      userId,
+      title: args.title,
+      categoryId: args.categoryId,
+      amount: args.amount,
+      date: args.date,
+      addedBy: args.addedBy,
+      status: args.status,
+      updatedAt: now,
+    });
+
+    return expenseId;
   },
 });
 
@@ -78,12 +96,27 @@ export const getStats = query({
 
     const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_creation_time", (q) => q.gte("_creationTime", startDate.getTime()))
-      .collect();
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect()
+      .then(allExpenses => 
+        allExpenses.filter(expense => expense.date >= startDate.getTime())
+      );
 
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    
+    // Get category names for expense statistics
+    const categoryIds = [...new Set(expenses.map(e => e.categoryId))];
+    const categories = await Promise.all(
+      categoryIds.map(id => ctx.db.get(id))
+    );
+    
+    const categoryIdToName = Object.fromEntries(
+      categories.filter(Boolean).map(cat => [cat!._id, cat!.name])
+    );
+
     const expensesByCategory = expenses.reduce((acc, expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      const categoryName = categoryIdToName[expense.categoryId] || "Unknown";
+      acc[categoryName] = (acc[categoryName] || 0) + expense.amount;
       return acc;
     }, {} as Record<string, number>);
 
@@ -92,5 +125,57 @@ export const getStats = query({
       expensesByCategory,
       count: expenses.length,
     };
+  },
+});
+
+// Update an expense
+export const update = mutation({
+  args: {
+    id: v.id("expenses"),
+    title: v.optional(v.string()),
+    categoryId: v.optional(v.id("expensecategory")),
+    amount: v.optional(v.number()),
+    date: v.optional(v.number()),
+    addedBy: v.optional(v.string()),
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const expense = await ctx.db.get(args.id);
+    if (!expense) throw new Error("Expense not found");
+    if (expense.userId !== userId) throw new Error("Unauthorized");
+
+    const now = Date.now();
+    const updates: any = { updatedAt: now };
+    
+    if (args.title !== undefined) updates.title = args.title;
+    if (args.categoryId !== undefined) updates.categoryId = args.categoryId;
+    if (args.amount !== undefined) updates.amount = args.amount;
+    if (args.date !== undefined) updates.date = args.date;
+    if (args.addedBy !== undefined) updates.addedBy = args.addedBy;
+    if (args.status !== undefined) updates.status = args.status;
+
+    await ctx.db.patch(args.id, updates);
+    return args.id;
+  },
+});
+
+// Delete an expense
+export const remove = mutation({
+  args: {
+    id: v.id("expenses"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const expense = await ctx.db.get(args.id);
+    if (!expense) throw new Error("Expense not found");
+    if (expense.userId !== userId) throw new Error("Unauthorized");
+
+    await ctx.db.delete(args.id);
+    return args.id;
   },
 });

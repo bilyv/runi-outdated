@@ -22,7 +22,7 @@ export type ModuleType =
   | "transactions";
 
 import { Navbar } from "./Navbar";
-import { BarChart3, Package, ShoppingCart, Menu, Banknote } from "lucide-react";
+import { BarChart3, Package, Menu, Receipt, FileText } from "lucide-react";
 
 export function BusinessDashboard() {
   const [activeModule, setActiveModule] = useState<ModuleType>("dashboard");
@@ -57,7 +57,8 @@ export function BusinessDashboard() {
   const bottomNavItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "products", label: "Products", icon: Package },
-    { id: "sales", label: "Sales", icon: ShoppingCart },
+    { id: "expenses", label: "Expenses", icon: Receipt },
+    { id: "documents", label: "Documents", icon: FileText },
   ];
 
   return (

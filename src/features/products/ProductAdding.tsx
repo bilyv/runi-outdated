@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Plus, PackagePlus, ArchiveRestore, AlertTriangle, Edit3 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
@@ -7,69 +9,15 @@ import { Input } from "../../components/ui/Input";
 interface ProductAddingProps {
 }
 
-interface Product {
-  _id: string;
-  name: string;
-  category_id: string;
-  quantity_box: number;
-  quantity_kg: number;
-  box_to_kg_ratio: number;
-  cost_per_box: number;
-  cost_per_kg: number;
-  price_per_box: number;
-  price_per_kg: number;
-  boxed_low_stock_threshold: number;
-  expiry_date: string;
-}
-
-interface Category {
-  _id: string;
-  category_name: string;
-}
-
 export function ProductAdding({}: ProductAddingProps) {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [isRestockOpen, setIsRestockOpen] = useState(false);
   const [isRecordDamagedOpen, setIsRecordDamagedOpen] = useState(false);
   const [isStockCorrectionOpen, setIsStockCorrectionOpen] = useState(false);
   
-  // Mock data for demonstration - in a real app, this would come from Convex queries
-  const [products, setProducts] = useState<Product[]>([
-    { 
-      _id: "1", 
-      name: "Sample Product 1", 
-      category_id: "cat1",
-      quantity_box: 10,
-      quantity_kg: 5,
-      box_to_kg_ratio: 2,
-      cost_per_box: 100,
-      cost_per_kg: 50,
-      price_per_box: 150,
-      price_per_kg: 75,
-      boxed_low_stock_threshold: 5,
-      expiry_date: "2024-12-31"
-    },
-    { 
-      _id: "2", 
-      name: "Sample Product 2", 
-      category_id: "cat2",
-      quantity_box: 20,
-      quantity_kg: 10,
-      box_to_kg_ratio: 2,
-      cost_per_box: 200,
-      cost_per_kg: 100,
-      price_per_box: 300,
-      price_per_kg: 150,
-      boxed_low_stock_threshold: 3,
-      expiry_date: "2025-06-30"
-    }
-  ]);
-  
-  const [categories, setCategories] = useState<Category[]>([
-    { _id: "cat1", category_name: "Electronics" },
-    { _id: "cat2", category_name: "Clothing" },
-    { _id: "cat3", category_name: "Food & Beverages" }
-  ]);
+  // Fetch real data from Convex
+  const categories = useQuery(api.productCategories.list) || [];
+  const products = useQuery(api.products.list) || [];
   
   // Add New Product Form State
   const [addProductForm, setAddProductForm] = useState({

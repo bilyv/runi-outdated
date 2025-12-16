@@ -14,7 +14,6 @@ export function LiveStock({
     setSearch,
     products,
     categories,
-    onEditProduct
 }: LiveStockProps) {
     const [currentView, setCurrentView] = useState("all");
     const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);

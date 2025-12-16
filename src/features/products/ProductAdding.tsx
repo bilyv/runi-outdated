@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Plus, PackagePlus, ArchiveRestore, AlertTriangle, Edit3 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
@@ -18,6 +18,11 @@ export function ProductAdding({}: ProductAddingProps) {
   // Fetch real data from Convex
   const categories = useQuery(api.productCategories.list) || [];
   const products = useQuery(api.products.list) || [];
+  
+  // Mutations
+  const createProduct = useMutation(api.products.create);
+  const updateProduct = useMutation(api.products.update);
+  const restockProduct = useMutation(api.products.restock);
   
   // Add New Product Form State
   const [addProductForm, setAddProductForm] = useState({
@@ -238,43 +243,95 @@ export function ProductAdding({}: ProductAddingProps) {
   };
   
   // Handle Add New Product Submit
-  const handleAddProductSubmit = () => {
+  const handleAddProductSubmit = async () => {
     if (validateAddProductForm()) {
-      // In a real app, this would call a Convex mutation
-      console.log("Add New Product Submitted:", addProductForm);
-      alert("Product added successfully!");
-      setIsAddProductOpen(false);
-      // Reset form
-      setAddProductForm({
-        name: "",
-        category_id: "",
-        quantity_box: "",
-        box_to_kg_ratio: "",
-        weight: "",
-        weightUnit: "kg",
-        cost_per_box: "",
-        sell_price_per_box: "",
-        low_stock_alert: "",
-        expiry_date: ""
-      });
+      try {
+        // Calculate derived values
+        const quantityBox = Number(addProductForm.quantity_box);
+        const boxToKgRatio = Number(addProductForm.box_to_kg_ratio);
+        const quantityKg = quantityBox * boxToKgRatio;
+        const costPerBox = Number(addProductForm.cost_per_box);
+        const costPerKg = boxToKgRatio > 0 ? costPerBox / boxToKgRatio : 0;
+        const pricePerBox = Number(addProductForm.sell_price_per_box);
+        const pricePerKg = boxToKgRatio > 0 ? pricePerBox / boxToKgRatio : 0;
+        const profitPerBox = pricePerBox - costPerBox;
+        const profitPerKg = pricePerKg - costPerKg;
+        const lowStockThreshold = Number(addProductForm.low_stock_alert);
+        
+        // Calculate days left until expiry
+        const expiryDate = new Date(addProductForm.expiry_date);
+        const today = new Date();
+        const timeDiff = expiryDate.getTime() - today.getTime();
+        const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        
+        await createProduct({
+          name: addProductForm.name,
+          category_id: addProductForm.category_id,
+          quantity_box: quantityBox,
+          quantity_kg: quantityKg,
+          box_to_kg_ratio: boxToKgRatio,
+          cost_per_box: costPerBox,
+          cost_per_kg: costPerKg,
+          price_per_box: pricePerBox,
+          price_per_kg: pricePerKg,
+          profit_per_box: profitPerBox,
+          profit_per_kg: profitPerKg,
+          boxed_low_stock_threshold: lowStockThreshold,
+          expiry_date: addProductForm.expiry_date,
+          days_left: daysLeft
+        });
+        
+        alert("Product added successfully!");
+        setIsAddProductOpen(false);
+        // Reset form
+        setAddProductForm({
+          name: "",
+          category_id: "",
+          quantity_box: "",
+          box_to_kg_ratio: "",
+          weight: "",
+          weightUnit: "kg",
+          cost_per_box: "",
+          sell_price_per_box: "",
+          low_stock_alert: "",
+          expiry_date: ""
+        });
+      } catch (error: any) {
+        console.error("Error adding product:", error);
+        alert("Failed to add product: " + (error.message || "Unknown error"));
+      }
     }
   };
   
   // Handle Restock Submit
-  const handleRestockSubmit = () => {
+  const handleRestockSubmit = async () => {
     if (validateRestockForm()) {
-      // In a real app, this would call a Convex mutation
-      console.log("Restock Submitted:", restockForm);
-      alert("Restock recorded successfully!");
-      setIsRestockOpen(false);
-      // Reset form
-      setRestockForm({
-        product_id: "",
-        boxes_amount: "",
-        kg_amount: "",
-        delivery_date: "",
-        expiry_date: ""
-      });
+      try {
+        const boxesAmount = Number(restockForm.boxes_amount);
+        const kgAmount = Number(restockForm.kg_amount);
+        
+        await restockProduct({
+          id: restockForm.product_id,
+          boxes_amount: boxesAmount,
+          kg_amount: kgAmount,
+          delivery_date: restockForm.delivery_date,
+          expiry_date: restockForm.expiry_date
+        });
+        
+        alert("Restock recorded successfully!");
+        setIsRestockOpen(false);
+        // Reset form
+        setRestockForm({
+          product_id: "",
+          boxes_amount: "",
+          kg_amount: "",
+          delivery_date: "",
+          expiry_date: ""
+        });
+      } catch (error: any) {
+        console.error("Error restocking product:", error);
+        alert("Failed to restock product: " + (error.message || "Unknown error"));
+      }
     }
   };
   

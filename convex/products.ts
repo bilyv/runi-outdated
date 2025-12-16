@@ -140,3 +140,43 @@ export const deleteProduct = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+// Restock a product
+export const restock = mutation({
+  args: {
+    id: v.id("products"),
+    boxes_amount: v.number(),
+    kg_amount: v.number(),
+    delivery_date: v.string(),
+    expiry_date: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const product = await ctx.db.get(args.id);
+    if (!product || product.user_id !== userId) {
+      throw new Error("Product not found or access denied");
+    }
+
+    // Update product quantities
+    const newQuantityBox = product.quantity_box + args.boxes_amount;
+    const newQuantityKg = product.quantity_kg + args.kg_amount;
+    
+    // Calculate days left until new expiry date
+    const expiryDate = new Date(args.expiry_date);
+    const today = new Date();
+    const timeDiff = expiryDate.getTime() - today.getTime();
+    const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    await ctx.db.patch(args.id, {
+      quantity_box: newQuantityBox,
+      quantity_kg: newQuantityKg,
+      expiry_date: args.expiry_date,
+      days_left: daysLeft,
+      updated_at: Date.now(),
+    });
+
+    return args.id;
+  },
+});

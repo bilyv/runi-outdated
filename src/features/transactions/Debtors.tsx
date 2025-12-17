@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 
 export function Debtors() {
   // Get both pending and partial transactions
@@ -10,9 +11,39 @@ export function Debtors() {
   const updateTransaction = useMutation(api.transactions.update);
   
   const [isLoading, setIsLoading] = useState(true);
-  const [allDebtTransactions, setAllDebtTransactions] = useState([]);
+  const [allDebtTransactions, setAllDebtTransactions] = useState<Array<{
+    _id: Id<"transactions">;
+    _creationTime: number;
+    transaction_id: string;
+    sales_id: Id<"sales">;
+    user_id: Id<"users">;
+    product_name: string;
+    client_name: string;
+    boxes_quantity: number;
+    kg_quantity: number;
+    total_amount: number;
+    payment_status: "pending" | "partial" | "completed";
+    payment_method: string;
+    updated_by: Id<"users">;
+    updated_at: number;
+  }>>([]);
   const [showModal, setShowModal] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<{
+    _id: Id<"transactions">;
+    _creationTime: number;
+    transaction_id: string;
+    sales_id: Id<"sales">;
+    user_id: Id<"users">;
+    product_name: string;
+    client_name: string;
+    boxes_quantity: number;
+    kg_quantity: number;
+    total_amount: number;
+    payment_status: "pending" | "partial" | "completed";
+    payment_method: string;
+    updated_by: Id<"users">;
+    updated_at: number;
+  } | null>(null);
   const [amountPaid, setAmountPaid] = useState('');
 
   useEffect(() => {

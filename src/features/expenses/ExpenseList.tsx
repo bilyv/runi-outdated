@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "convex/dist/esm/types";
 import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
 
 export function ExpenseList() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [categoryId, setCategoryId] = useState("");
+  const [categoryId, setCategoryId] = useState<Id<"expensecategory"> | "">("");
   
   const expenses = useQuery(api.expenses.list, {
-    ...(categoryId && { categoryId }),
+    ...(categoryId && { categoryId: categoryId as Id<"expensecategory"> }),
   });
   
   const categories = useQuery(api.expenseCategories.list);
@@ -27,7 +28,7 @@ export function ExpenseList() {
     }).format(amount);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"expenses">) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       try {
         await deleteExpense({ id });
@@ -80,7 +81,7 @@ export function ExpenseList() {
             <select
               id="categoryId"
               value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
+              onChange={(e) => setCategoryId(e.target.value as Id<"expensecategory"> | "")}
               className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text"
             >
               <option value="">All Categories</option>

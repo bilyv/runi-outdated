@@ -17,9 +17,14 @@ interface FileType {
 export function Files() {
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileType | null>(null);
   
   // Fetch files from Convex
   const files = useQuery(api.files.list, { folderId: undefined }) || [];
+  
+  // Delete file mutation
+  const deleteFile = useMutation(api.files.deleteFile);
   
   const handleViewFile = (file: FileType) => {
     setSelectedFile(file);
@@ -29,6 +34,29 @@ export function Files() {
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setSelectedFile(null);
+  };
+  
+  const handleDeleteClick = (file: FileType) => {
+    setFileToDelete(file);
+    setIsDeleteConfirmOpen(true);
+  };
+  
+  const handleConfirmDelete = async () => {
+    if (fileToDelete) {
+      try {
+        await deleteFile({ id: fileToDelete._id });
+        setIsDeleteConfirmOpen(false);
+        setFileToDelete(null);
+      } catch (error) {
+        console.error("Failed to delete file:", error);
+        // Optionally show an error message to the user
+      }
+    }
+  };
+  
+  const handleCancelDelete = () => {
+    setIsDeleteConfirmOpen(false);
+    setFileToDelete(null);
   };
   
   const formatFileSize = (bytes: number) => {
@@ -79,14 +107,25 @@ export function Files() {
                 <span>{formatFileSize(file.file_size)}</span>
                 <span className="truncate ml-2">{file.file_type.split('/')[1] || file.file_type}</span>
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-full justify-center"
-                onClick={() => handleViewFile(file)}
-              >
-                View
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="w-full justify-center"
+                  onClick={() => handleViewFile(file)}
+                >
+                  View
+                </Button>
+                <button 
+                  onClick={() => handleDeleteClick(file)}
+                  className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                  aria-label="Delete file"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -149,6 +188,32 @@ export function Files() {
             </div>
           </div>
         )}
+      </Modal>
+      
+      {/* Delete Confirmation Modal */}
+      <Modal 
+        isOpen={isDeleteConfirmOpen} 
+        onClose={handleCancelDelete} 
+        title="Delete File"
+      >
+        <div className="space-y-4">
+          <p>Are you sure you want to delete the file <strong>{fileToDelete?.file_name}</strong>? This action cannot be undone.</p>
+          
+          <div className="flex justify-end gap-2 pt-2">
+            <Button 
+              variant="secondary" 
+              onClick={handleCancelDelete}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

@@ -132,23 +132,59 @@ const applicationTables = {
 
   // Sales
   sales: defineTable({
-    customerName: v.string(),
-    items: v.array(v.object({
-      productId: v.id("products"),
-      productName: v.string(),
-      quantity: v.number(),
-      unitPrice: v.number(),
-      total: v.number(),
-    })),
-    subtotal: v.number(),
-    tax: v.number(),
-    total: v.number(),
-    amountPaid: v.number(),
-    status: v.union(v.literal("pending"), v.literal("partial"), v.literal("completed")),
-    paymentMethod: v.optional(v.string()),
-    notes: v.optional(v.string()),
+    sales_id: v.string(),
+    user_id: v.id("users"),
+    product_id: v.id("products"),
+    boxes_quantity: v.number(),
+    kg_quantity: v.number(),
+    box_price: v.number(),
+    kg_price: v.number(),
+    profit_per_box: v.number(),
+    profit_per_kg: v.number(),
+    total_amount: v.number(),
+    amount_paid: v.number(),
+    remaining_amount: v.number(),
+    payment_status: v.union(v.literal("pending"), v.literal("partial"), v.literal("completed")),
+    payment_method: v.string(),
+    performed_by: v.id("users"),
+    client_id: v.string(),
+    client_name: v.string(),
+    phone_number: v.string(),
+    updated_at: v.number(),
   })
-    .index("by_status", ["status"]),
+    .index("by_user", ["user_id"])
+    .index("by_product", ["product_id"])
+    .index("by_client", ["client_id"])
+    .index("by_payment_status", ["payment_status"])
+    .index("by_performed_by", ["performed_by"]),
+
+  // Sales Audit
+  sales_audit: defineTable({
+    audit_id: v.string(),
+    user_id: v.id("users"),
+    sales_id: v.id("sales"),
+    audit_type: v.string(),
+    boxes_change: v.object({
+      before: v.optional(v.number()),
+      after: v.optional(v.number()),
+    }),
+    kg_change: v.object({
+      before: v.optional(v.number()),
+      after: v.optional(v.number()),
+    }),
+    old_values: v.optional(v.any()),
+    new_values: v.optional(v.any()),
+    performed_by: v.id("users"),
+    approval_status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    approved_by: v.optional(v.id("users")),
+    approved_timestamp: v.optional(v.number()),
+    reason: v.string(),
+    updated_at: v.number(),
+  })
+    .index("by_sales", ["sales_id"])
+    .index("by_user", ["user_id"])
+    .index("by_performed_by", ["performed_by"])
+    .index("by_approval_status", ["approval_status"]),
 
   // Expense Categories
   expensecategory: defineTable({

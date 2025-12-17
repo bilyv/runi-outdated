@@ -4,7 +4,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
   args: {
-    status: v.optional(v.union(v.literal("pending"), v.literal("partial"), v.literal("completed"))),
+    payment_status: v.optional(v.union(v.literal("pending"), v.literal("partial"), v.literal("completed"))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -12,10 +12,10 @@ export const list = query({
 
     let sales;
 
-    if (args.status) {
+    if (args.payment_status) {
       sales = await ctx.db
         .query("sales")
-        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .withIndex("by_payment_status", (q) => q.eq("payment_status", args.payment_status!))
         .order("desc")
         .collect();
     } else {
@@ -28,45 +28,41 @@ export const list = query({
 
 export const create = mutation({
   args: {
-    customerName: v.string(),
-    items: v.array(v.object({
-      productId: v.id("products"),
-      productName: v.string(),
-      quantity: v.number(),
-      unitPrice: v.number(),
-      total: v.number(),
-    })),
-    subtotal: v.number(),
-    tax: v.number(),
-    total: v.number(),
-    amountPaid: v.number(),
-    paymentMethod: v.optional(v.string()),
-    notes: v.optional(v.string()),
+    sales_id: v.string(),
+    user_id: v.id("users"),
+    product_id: v.id("products"),
+    boxes_quantity: v.number(),
+    kg_quantity: v.number(),
+    box_price: v.number(),
+    kg_price: v.number(),
+    profit_per_box: v.number(),
+    profit_per_kg: v.number(),
+    total_amount: v.number(),
+    amount_paid: v.number(),
+    remaining_amount: v.number(),
+    payment_status: v.union(v.literal("pending"), v.literal("partial"), v.literal("completed")),
+    payment_method: v.string(),
+    performed_by: v.id("users"),
+    client_id: v.string(),
+    client_name: v.string(),
+    phone_number: v.string(),
+    updated_at: v.number(),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
     // Update product quantities
-    for (const item of args.items) {
-      const product = await ctx.db.get(item.productId);
-      if (product) {
-        // Reduce both box and kg quantities proportionally
-        // This is a simplification - in a real app you might track which unit was sold
-        const reductionRatio = item.quantity / (product.quantity_box + product.quantity_kg * product.box_to_kg_ratio);
-        await ctx.db.patch(item.productId, {
-          quantity_box: Math.max(0, product.quantity_box - (product.quantity_box * reductionRatio)),
-          quantity_kg: Math.max(0, product.quantity_kg - (product.quantity_kg * reductionRatio))
-        });
-      }
+    const product = await ctx.db.get(args.product_id);
+    if (product) {
+      await ctx.db.patch(args.product_id, {
+        quantity_box: Math.max(0, product.quantity_box - args.boxes_quantity),
+        quantity_kg: Math.max(0, product.quantity_kg - args.kg_quantity)
+      });
     }
-
-    const status = args.amountPaid === 0 ? "pending" :
-      args.amountPaid < args.total ? "partial" : "completed";
 
     return await ctx.db.insert("sales", {
       ...args,
-      status,
     });
   },
 });
@@ -84,12 +80,15 @@ export const addPayment = mutation({
     const sale = await ctx.db.get(args.saleId);
     if (!sale) throw new Error("Sale not found");
 
-    const newAmountPaid = sale.amountPaid + args.amount;
-    const newStatus = newAmountPaid >= sale.total ? "completed" : "partial";
+    const newAmountPaid = sale.amount_paid + args.amount;
+    const newRemainingAmount = sale.total_amount - newAmountPaid;
+    const newStatus = newAmountPaid >= sale.total_amount ? "completed" : 
+                     newAmountPaid > 0 ? "partial" : "pending";
 
     return await ctx.db.patch(args.saleId, {
-      amountPaid: newAmountPaid,
-      status: newStatus,
+      amount_paid: newAmountPaid,
+      remaining_amount: newRemainingAmount,
+      payment_status: newStatus,
     });
   },
 });
@@ -119,11 +118,10 @@ export const getStats = query({
 
     const sales = await ctx.db
       .query("sales")
-      .withIndex("by_creation_time", (q) => q.gte("_creationTime", startDate.getTime()))
       .collect();
 
     const totalSales = sales.length;
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.amountPaid, 0);
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.amount_paid, 0);
 
     return {
       totalSales,

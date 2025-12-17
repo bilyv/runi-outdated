@@ -48,7 +48,7 @@ function groupDataByDate(data: any[], startDate: Date, interval: "day" | "week" 
     const itemDate = new Date(item._creationTime);
     const key = formatDate(itemDate, period);
     if (grouped.hasOwnProperty(key)) {
-      grouped[key] += item.amountPaid || item.amount || 0;
+      grouped[key] += item.amount_paid || item.amount || 0;
     }
   });
   
@@ -84,7 +84,6 @@ export const getStats = query({
     // Get sales data
     const sales = await ctx.db
       .query("sales")
-      .withIndex("by_creation_time", (q) => q.gte("_creationTime", startDate.getTime()))
       .collect();
 
     // Get expenses data
@@ -105,16 +104,14 @@ export const getStats = query({
     
     // Calculate totals
     const totalSales = sales.length;
-    const totalRevenue = sales.reduce((sum, sale) => sum + sale.amountPaid, 0);
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.amount_paid, 0);
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const totalProfit = totalRevenue - totalExpenses;
     
-    // Calculate cost of goods sold
+    // Calculate cost of goods sold (simplified calculation)
     const totalCostOfGoods = sales.reduce((sum, sale) => {
-      return sum + sale.items.reduce((itemSum, item) => {
-        // This is a simplified calculation - in reality you'd need to track actual cost per item
-        return itemSum + (item.total * 0.6); // Assuming 60% cost ratio
-      }, 0);
+      // Simplified calculation based on profit fields
+      return sum + (sale.total_amount - (sale.profit_per_box * sale.boxes_quantity + sale.profit_per_kg * sale.kg_quantity));
     }, 0);
     
     const actualProfit = totalRevenue - totalCostOfGoods - totalExpenses;
@@ -148,11 +145,9 @@ export const getStats = query({
     
     const lastPeriodSales = await ctx.db
       .query("sales")
-      .withIndex("by_creation_time", (q) => 
-        q.gte("_creationTime", lastPeriodStart.getTime()).lt("_creationTime", startDate.getTime()))
       .collect();
       
-    const lastPeriodRevenue = lastPeriodSales.reduce((sum, sale) => sum + sale.amountPaid, 0);
+    const lastPeriodRevenue = lastPeriodSales.reduce((sum, sale) => sum + sale.amount_paid, 0);
     const revenueGrowth = lastPeriodRevenue > 0 
       ? ((totalRevenue - lastPeriodRevenue) / lastPeriodRevenue) * 100 
       : 0;

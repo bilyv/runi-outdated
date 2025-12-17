@@ -258,6 +258,26 @@ const applicationTables = {
   })
     .index("by_key", ["key"])
     .index("by_category", ["category"]),
+
+  // Transactions
+  transactions: defineTable({
+    transaction_id: v.string(),
+    sales_id: v.id("sales"),
+    user_id: v.id("users"),
+    product_name: v.string(),
+    client_name: v.string(),
+    boxes_quantity: v.number(),
+    kg_quantity: v.number(),
+    total_amount: v.number(),
+    payment_status: v.union(v.literal("pending"), v.literal("partial"), v.literal("completed")),
+    payment_method: v.string(),
+    updated_by: v.id("users"),
+    updated_at: v.number(),
+  })
+    .index("by_sales", ["sales_id"])
+    .index("by_user", ["user_id"])
+    .index("by_payment_status", ["payment_status"])
+    .index("by_updated_by", ["updated_by"]),
 };
 
 export default defineSchema({

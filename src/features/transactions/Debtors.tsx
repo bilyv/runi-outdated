@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 export function Debtors() {
@@ -7,8 +7,13 @@ export function Debtors() {
   const pendingTransactions = useQuery(api.transactions.listByPaymentStatus, { payment_status: "pending" });
   const partialTransactions = useQuery(api.transactions.listByPaymentStatus, { payment_status: "partial" });
   
+  const updateTransaction = useMutation(api.transactions.update);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [allDebtTransactions, setAllDebtTransactions] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [amountPaid, setAmountPaid] = useState('');
 
   useEffect(() => {
     if (pendingTransactions !== undefined && partialTransactions !== undefined) {
@@ -58,11 +63,12 @@ export function Debtors() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Amount</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payment Method</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                     No debt records found
                   </td>
                 </tr>
@@ -89,6 +95,7 @@ export function Debtors() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Amount</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payment Method</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
@@ -109,12 +116,129 @@ export function Debtors() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{transaction.payment_method}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <button 
+                      onClick={() => {
+                        setSelectedTransaction(transaction);
+                        setShowModal(true);
+                      }}
+                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-xs"
+                    >
+                      Mark as Paid
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+      
+      {/* Mark as Paid Modal */}
+      {showModal && selectedTransaction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-dark-card rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Mark as Paid</h3>
+                <button 
+                  onClick={() => {
+                    setShowModal(false);
+                    setSelectedTransaction(null);
+                    setAmountPaid('');
+                  }}
+                  className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  
+                  // Calculate new payment status
+                  const newPaymentStatus = 
+                    parseFloat(amountPaid) >= selectedTransaction.total_amount ? 'completed' : 'partial';
+                  
+                  try {
+                    // Update the transaction
+                    await updateTransaction({
+                      transaction_id: selectedTransaction.transaction_id,
+                      sales_id: selectedTransaction.sales_id,
+                      user_id: selectedTransaction.user_id,
+                      product_name: selectedTransaction.product_name,
+                      client_name: selectedTransaction.client_name,
+                      boxes_quantity: selectedTransaction.boxes_quantity,
+                      kg_quantity: selectedTransaction.kg_quantity,
+                      total_amount: selectedTransaction.total_amount,
+                      payment_status: newPaymentStatus,
+                      payment_method: selectedTransaction.payment_method,
+                      updated_by: selectedTransaction.updated_by, // In a real app, this would be the current user
+                      updated_at: Date.now(),
+                    });
+                  } catch (error) {
+                    console.error('Error updating transaction:', error);
+                    // In a real app, you would show an error message to the user
+                  }
+                  
+                  // Close modal and reset state
+                  setShowModal(false);
+                  setSelectedTransaction(null);
+                  setAmountPaid('');
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Customer</label>
+                  <input 
+                    type="text" 
+                    value={selectedTransaction.client_name}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-dark-text"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount Paid</label>
+                  <input 
+                    type="number" 
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
+                    min="0"
+                    step="0.01"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-dark-text"
+                    placeholder="Enter amount paid"
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setShowModal(false);
+                      setSelectedTransaction(null);
+                      setAmountPaid('');
+                    }}
+                    className="px-4 py-2 border border-gray-300 dark:border-dark-border rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-card hover:bg-gray-50 dark:hover:bg-dark-card/50"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Mark as Paid
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

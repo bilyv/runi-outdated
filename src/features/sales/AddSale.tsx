@@ -3,9 +3,10 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
+import { useCurrentUser } from "../../lib/utils";
 
 export function AddSale() {
-  const [isFormVisible, setIsFormVisible] = useState(false);
+  const currentUser = useCurrentUser();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export function AddSale() {
     kg_quantity: "",
     payment_method: "Mobile Money",
     payment_status: "Paid",
+    amount_paid: "",
     client_name: "",
     phone_number: ""
   });
@@ -59,12 +61,47 @@ export function AddSale() {
       newErrors.kg_quantity = "Must be a valid number";
     }
     
+    // Check stock availability
+    if (formData.product_id && (formData.boxes_quantity || formData.kg_quantity)) {
+      const selectedProduct = products.find(p => p._id === formData.product_id);
+      if (selectedProduct) {
+        const requestedBoxes = parseFloat(formData.boxes_quantity) || 0;
+        const requestedKg = parseFloat(formData.kg_quantity) || 0;
+        
+        // Check if stock levels are zero or negative
+        if (selectedProduct.quantity_box <= 0 && requestedBoxes > 0) {
+          newErrors.boxes_quantity = `Insufficient stock. Available: ${selectedProduct.quantity_box} boxes`;
+        }
+        
+        if (selectedProduct.quantity_kg <= 0 && requestedKg > 0) {
+          newErrors.kg_quantity = `Insufficient stock. Available: ${selectedProduct.quantity_kg} kg`;
+        }
+        
+        // Check if requested quantities exceed available stock
+        if (requestedBoxes > selectedProduct.quantity_box && selectedProduct.quantity_box > 0) {
+          newErrors.boxes_quantity = `Insufficient stock. Available: ${selectedProduct.quantity_box} boxes`;
+        }
+        
+        if (requestedKg > selectedProduct.quantity_kg && selectedProduct.quantity_kg > 0) {
+          newErrors.kg_quantity = `Insufficient stock. Available: ${selectedProduct.quantity_kg} kg`;
+        }
+      }
+    }
+    
     if ((formData.payment_status === "Pending" || formData.payment_status === "Half Paid") && !formData.client_name) {
       newErrors.client_name = "Client name is required for pending payments";
     }
     
     if ((formData.payment_status === "Pending" || formData.payment_status === "Half Paid") && !formData.phone_number) {
       newErrors.phone_number = "Phone number is required for pending payments";
+    }
+    
+    if (formData.payment_status === "Half Paid" && !formData.amount_paid) {
+      newErrors.amount_paid = "Amount paid is required when status is Half Paid";
+    }
+    
+    if (formData.amount_paid && isNaN(Number(formData.amount_paid))) {
+      newErrors.amount_paid = "Must be a valid number";
     }
     
     setErrors(newErrors);
@@ -78,8 +115,12 @@ export function AddSale() {
     if (!validateForm()) return;
     
     try {
-      // In a real implementation, you would get the actual user ID
-      const userId = "user_123"; // Placeholder
+      if (!currentUser) {
+        alert("You must be logged in to create a sale");
+        return;
+      }
+      
+      const userId = currentUser._id;
       
       // Find the selected product to get pricing information
       const selectedProduct = products.find(p => p._id === formData.product_id);
@@ -100,10 +141,21 @@ export function AddSale() {
       if (formData.payment_status === "Paid") {
         amountPaid = totalAmount;
       } else if (formData.payment_status === "Half Paid") {
-        amountPaid = totalAmount / 2;
+        // Use the entered amount if provided, otherwise default to half
+        amountPaid = formData.amount_paid ? parseFloat(formData.amount_paid) : totalAmount / 2;
       }
       
       const remainingAmount = totalAmount - amountPaid;
+      
+      // Map payment status to match API requirements
+      let apiPaymentStatus: "pending" | "partial" | "completed" = "pending";
+      if (formData.payment_status === "Paid") {
+        apiPaymentStatus = "completed";
+      } else if (formData.payment_status === "Half Paid") {
+        apiPaymentStatus = "partial";
+      } else {
+        apiPaymentStatus = "pending";
+      }
       
       // Create the sale
       await createSale({
@@ -119,7 +171,7 @@ export function AddSale() {
         total_amount: totalAmount,
         amount_paid: amountPaid,
         remaining_amount: remainingAmount,
-        payment_status: formData.payment_status.toLowerCase() as any,
+        payment_status: apiPaymentStatus,
         payment_method: formData.payment_method,
         performed_by: userId,
         client_id: `client_${Date.now()}`,
@@ -135,6 +187,7 @@ export function AddSale() {
         kg_quantity: "",
         payment_method: "Mobile Money",
         payment_status: "Paid",
+        amount_paid: "",
         client_name: "",
         phone_number: ""
       });
@@ -146,41 +199,12 @@ export function AddSale() {
     }
   };
   
-  // Show form when "Start New Sale" is clicked
-  if (!isFormVisible) {
-    return (
-      <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-8 text-center">
-        <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text mb-2">Add New Sale</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Create a new sale transaction. Add customer details, products, and payment information.
-          </p>
-          <button 
-            onClick={() => setIsFormVisible(true)}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Start New Sale
-          </button>
-        </div>
-      </div>
-    );
-  }
+
   
   return (
     <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text">New Sale</h2>
-        <button 
-          onClick={() => setIsFormVisible(false)}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          Cancel
-        </button>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -203,7 +227,7 @@ export function AddSale() {
                 <option value="">Select a product</option>
                 {products.map((product: any) => (
                   <option key={product._id} value={product._id}>
-                    {product.name} ({product.quantity_box || 0} boxes, {product.quantity_kg || 0} kg)
+                    {product.name} ({product.quantity_box <= 0 ? 'OUT OF STOCK' : `${product.quantity_box} boxes`}, {product.quantity_kg <= 0 ? 'OUT OF STOCK' : `${product.quantity_kg} kg`})
                   </option>
                 ))}
               </select>
@@ -274,6 +298,21 @@ export function AddSale() {
                 <option value="Half Paid">Half Paid</option>
               </select>
             </div>
+            
+            {/* Conditional Amount Paid Field */}
+            {formData.payment_status === "Half Paid" && (
+              <div>
+                <Input
+                  label="Amount Paid"
+                  type="number"
+                  value={formData.amount_paid}
+                  onChange={(e) => handleChange('amount_paid', e.target.value)}
+                  error={errors.amount_paid}
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            )}
           </div>
         </div>
         

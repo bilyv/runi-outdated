@@ -17,15 +17,36 @@ Runi is a comprehensive business management application built with modern web te
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: 
-  - [React 19](https://react.dev/)
-  - [Vite](https://vitejs.dev/)
-  - [Tailwind CSS](https://tailwindcss.com/)
-  - [Lucide React](https://lucide.dev/) (Icons)
-  - [Sonner](https://sonner.emilkowal.ski/) (Toast notifications)
-- **Backend & Database**: 
-  - [Convex](https://convex.dev/) (Real-time database, server functions, and auth)
-- **Language**: TypeScript
+### Frontend
+- **Framework**: [React 19](https://react.dev/) with TypeScript
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) for utility-first CSS
+- **UI Components**: Custom component library with reusable elements
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Notifications**: [Sonner](https://sonner.emilkowal.ski/)
+- **State Management**: React Context API and useState/useReducer hooks
+- **Routing**: React Router DOM
+
+### Backend & Database
+- **Platform**: [Convex](https://convex.dev/)
+  - Real-time database with automatic conflict resolution
+  - Serverless functions for business logic
+  - Built-in authentication via `@convex-dev/auth`
+  - File storage with `_storage` table
+- **Database Schema**: Defined in `convex/schema.ts` with tables for products, sales, expenses, users, and more
+- **API Layer**: Convex functions (queries, mutations, actions) in respective feature files
+
+### Authentication
+- **Library**: `@convex-dev/auth` with password provider
+- **Session Management**: Automatic session handling with secure cookies
+- **Protected Routes**: Custom hooks and wrappers for route protection
+
+### Development & Deployment
+- **Language**: TypeScript (strict mode)
+- **Linting**: ESLint with recommended presets
+- **Code Formatting**: Prettier
+- **Package Manager**: npm
+- **Deployment**: Convex hosting with automatic CI/CD
 
 ## 📂 Project Structure
 

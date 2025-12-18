@@ -6,7 +6,7 @@ Runi is a comprehensive business management application built with modern web te
 
 - **Dashboard**: Real-time overview of business performance and metrics.
 - **Products**: Comprehensive inventory management (add, edit, delete with approval workflow, tracking).
-  - Two-phase product deletion approval workflow to prevent accidental data loss
+  - Two-phase product editing and deletion approval workflow to prevent accidental data loss
   - Detailed stock movement tracking and auditing
 - **Sales**: Process and track sales orders.
 - **Expenses**: Record and categorize business expenses.
@@ -155,11 +155,25 @@ The application uses Convex as its backend database with the following key table
 - `damaged_products` - Damaged inventory tracking
 - `stock_movements` - All inventory movements (also used for product deletion approval workflow)
 
-#### Product Deletion Approval Workflow
+#### Product Editing and Deletion Approval Workflow
 
-The application implements a two-phase approval workflow for product deletions to prevent accidental data loss:
+The application implements a two-phase approval workflow for product edits and deletions to prevent accidental data loss:
 
-1. **Deletion Request Phase**:
+1. **Edit Request Phase**:
+   - User selects a product to edit in the inventory interface
+   - System opens the "Edit Product" dialog
+   - User modifies one or more fields and provides a reason for the changes
+   - Upon submission, for each changed field, a record is created in the `stock_movements` table with:
+     - `movement_type`: 'product_edit'
+     - `product_id`: References the product being edited
+     - `field_changed`: The specific field that was modified
+     - `old_value`: Original value before edit
+     - `new_value`: Proposed new value
+     - `reason`: User-provided explanation
+     - `status`: Initially 'pending'
+     - `performed_by`: User who initiated the edit
+
+2. **Deletion Request Phase**:
    - User selects a product to delete in the inventory interface
    - System opens the "Request Product Deletion" dialog
    - User must provide a reason for the deletion
@@ -170,11 +184,11 @@ The application implements a two-phase approval workflow for product deletions t
      - `status`: Initially 'pending'
      - `performed_by`: User who initiated the request
 
-2. **Approval Phase**:
-   - Pending deletion requests appear in the "Stock Adjustment" view
+3. **Approval Phase**:
+   - Pending edit and deletion requests appear in the "Stock Adjustment" view
    - Managers can either:
-     - **Approve**: Permanently deletes the product and updates the stock movement status to 'completed'
-     - **Reject**: Cancels the deletion request, keeping the product and updating the stock movement status to 'rejected'
+     - **Approve**: Applies the changes to the actual product (for edits) or permanently deletes the product (for deletions)
+     - **Reject**: Cancels the request, keeping the product unchanged
 
 #### Sales Table Structure
 
@@ -217,7 +231,7 @@ The `sales_audit` table tracks all changes to sales records:
 - `reason` - Explanation for the audit action
 - `updated_at` - Timestamp of the audit record creation
 
-Each table is designed with appropriate indexes for optimal query performance and includes timestamp fields for audit trails. The `stock_movements` table is particularly important as it not only tracks all inventory movements but also manages the product deletion approval workflow.
+Each table is designed with appropriate indexes for optimal query performance and includes timestamp fields for audit trails. The `stock_movements` table is particularly important as it not only tracks all inventory movements but also manages both product editing and deletion approval workflows. For edit requests, it includes a `field_changed` column to track which specific field is being modified.
 
 ## 🔄 Routing Implementation
 

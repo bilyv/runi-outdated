@@ -44,6 +44,8 @@ export function LiveStock({
     const recordStockMovement = useMutation(api.products.recordStockMovement);
     const approveProductDeletion = useMutation(api.products.approveProductDeletion);
     const rejectProductDeletion = useMutation(api.products.rejectProductDeletion);
+    const approveProductEdit = useMutation(api.products.approveProductEdit);
+    const rejectProductEdit = useMutation(api.products.rejectProductEdit);
 
     // Helper to get category name
     const getCategoryName = (categoryId: string) => {
@@ -504,7 +506,7 @@ export function LiveStock({
                         Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Stock Before Change
+                        Field Changed
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Change or Old vs New Values
@@ -541,14 +543,21 @@ export function LiveStock({
                                 </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
-                                {movement.old_value || 0}
+                                {movement.field_changed || '-'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    Old: {movement.old_value || 0}
-                                </div>
-                                <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    New: {movement.new_value || 0}
+                                    {movement.movement_type === 'product_edit' ? (
+                                        <>
+                                            <div>Old: {movement.old_value || '-'}</div>
+                                            <div>New: {movement.new_value || '-'}</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div>Old: {movement.old_value || 0}</div>
+                                            <div>New: {movement.new_value || 0}</div>
+                                        </>
+                                    )}
                                 </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text max-w-xs truncate">
@@ -568,18 +577,37 @@ export function LiveStock({
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                                 {movement.status === "pending" && (
                                     <>
-                                        <button 
-                                            className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
-                                            onClick={() => handleApproveDeletion(movement.movement_id, movement.product_id)}
-                                        >
-                                            <Check size={16} />
-                                        </button>
-                                        <button 
-                                            className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
-                                            onClick={() => handleRejectDeletion(movement.movement_id)}
-                                        >
-                                            <X size={16} />
-                                        </button>
+                                        {movement.movement_type === "product_edit" ? (
+                                            <>
+                                                <button 
+                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                                                    onClick={() => handleApproveEdit(movement.movement_id, movement.product_id)}
+                                                >
+                                                    <Check size={16} />
+                                                </button>
+                                                <button 
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                                                    onClick={() => handleRejectEdit(movement.movement_id)}
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button 
+                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
+                                                    onClick={() => handleApproveDeletion(movement.movement_id, movement.product_id)}
+                                                >
+                                                    <Check size={16} />
+                                                </button>
+                                                <button 
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                                                    onClick={() => handleRejectDeletion(movement.movement_id)}
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </>
+                                        )}
                                     </>
                                 )}
                             </td>
@@ -841,6 +869,30 @@ export function LiveStock({
         }
     };
 
+    // Handle approval of product edit
+    const handleApproveEdit = async (movementId: string, productId: string) => {
+        try {
+            await approveProductEdit({ movement_id: movementId, product_id: productId });
+            alert("Product edit approved successfully!");
+        } catch (error: any) {
+            console.error("Error approving edit:", error);
+            alert("Failed to approve edit: " + (error.message || "Unknown error"));
+        }
+    };
+
+    // Handle rejection of product edit
+    const handleRejectEdit = async (movementId: string) => {
+        try {
+            // For simplicity, we're not asking for a rejection reason in the UI
+            // In a real application, you might want to show a modal to collect the reason
+            await rejectProductEdit({ movement_id: movementId, rejection_reason: "Manager rejected the change" });
+            alert("Product edit rejected!");
+        } catch (error: any) {
+            console.error("Error rejecting edit:", error);
+            alert("Failed to reject edit: " + (error.message || "Unknown error"));
+        }
+    };
+
     // Validate edit product form
     const validateEditProductForm = () => {
         const newErrors: Record<string, string> = {};
@@ -873,46 +925,64 @@ export function LiveStock({
     const handleEditProductSubmit = async () => {
         if (validateEditProductForm() && editingProduct) {
             try {
-                // Calculate derived values
-                const boxToKgRatio = Number(editForm.box_to_kg_ratio);
-                const costPerBox = Number(editForm.cost_per_box);
-                const costPerKg = boxToKgRatio > 0 ? costPerBox / boxToKgRatio : 0;
-                const pricePerBox = Number(editForm.price_per_box);
-                const pricePerKg = boxToKgRatio > 0 ? pricePerBox / boxToKgRatio : 0;
-                const profitPerBox = pricePerBox - costPerBox;
-                const profitPerKg = pricePerKg - costPerKg;
+                // Create pending edit requests for each changed field
+                const changes = [];
                 
-                await updateProduct({
-                    id: editingProduct._id,
-                    name: editForm.name,
-                    box_to_kg_ratio: boxToKgRatio,
-                    cost_per_box: costPerBox,
-                    cost_per_kg: costPerKg,
-                    price_per_box: pricePerBox,
-                    price_per_kg: pricePerKg,
-                    profit_per_box: profitPerBox,
-                    profit_per_kg: profitPerKg
-                });
+                // Check which fields have changed
+                if (editForm.name !== editingProduct.name) {
+                    changes.push({
+                        field: 'name',
+                        oldValue: editingProduct.name,
+                        newValue: editForm.name
+                    });
+                }
                 
-                // Record stock movement for the change
-                await recordStockMovement({
-                    movement_id: `movement_${Date.now()}`,
-                    product_id: editingProduct._id,
-                    movement_type: "product_update",
-                    box_change: 0, // No change in quantity
-                    kg_change: 0, // No change in quantity
-                    old_value: editingProduct.quantity_box,
-                    new_value: editingProduct.quantity_box,
-                    reason: editForm.reason,
-                    status: "completed",
-                    performed: "User", // In a real app, this would be the actual user
-                });
+                if (Number(editForm.box_to_kg_ratio) !== editingProduct.box_to_kg_ratio) {
+                    changes.push({
+                        field: 'box_to_kg_ratio',
+                        oldValue: editingProduct.box_to_kg_ratio.toString(),
+                        newValue: editForm.box_to_kg_ratio
+                    });
+                }
                 
-                alert("Product updated successfully!");
+                if (Number(editForm.cost_per_box) !== editingProduct.cost_per_box) {
+                    changes.push({
+                        field: 'cost_per_box',
+                        oldValue: editingProduct.cost_per_box.toString(),
+                        newValue: editForm.cost_per_box
+                    });
+                }
+                
+                if (Number(editForm.price_per_box) !== editingProduct.price_per_box) {
+                    changes.push({
+                        field: 'price_per_box',
+                        oldValue: editingProduct.price_per_box.toString(),
+                        newValue: editForm.price_per_box
+                    });
+                }
+                
+                // Create a pending request for each change
+                for (const change of changes) {
+                    await recordStockMovement({
+                        movement_id: `movement_${Date.now()}_${change.field}`,
+                        product_id: editingProduct._id,
+                        movement_type: "product_edit",
+                        field_changed: change.field,
+                        box_change: 0, // No change in quantity
+                        kg_change: 0, // No change in quantity
+                        old_value: parseFloat(change.oldValue) || 0,
+                        new_value: parseFloat(change.newValue) || 0,
+                        reason: editForm.reason,
+                        status: "pending",
+                        performed: "User", // In a real app, this would be the actual user
+                    });
+                }
+                
+                alert(`Product edit request${changes.length > 1 ? 's' : ''} submitted successfully! Awaiting approval.`);
                 closeEditModal();
             } catch (error: any) {
-                console.error("Error updating product:", error);
-                alert("Failed to update product: " + (error.message || "Unknown error"));
+                console.error("Error submitting edit request:", error);
+                alert("Failed to submit edit request: " + (error.message || "Unknown error"));
             }
         }
     };

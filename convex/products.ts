@@ -294,6 +294,118 @@ export const rejectProductDeletion = mutation({
   },
 });
 
+// Approve product edit request
+export const approveProductEdit = mutation({
+  args: { 
+    movement_id: v.string(),
+    product_id: v.id("products") 
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Get the stock movement
+    const movement = await ctx.db.query("stock_movements")
+      .withIndex("by_user", q => q.eq("user_id", userId))
+      .filter(q => q.eq(q.field("movement_id"), args.movement_id))
+      .unique();
+      
+    if (!movement) {
+      throw new Error("Edit request not found");
+    }
+
+    // Get the product
+    const product = await ctx.db.get(args.product_id);
+    if (!product || product.user_id !== userId) {
+      throw new Error("Product not found or access denied");
+    }
+
+    // Prepare update object based on the field changed
+    const updateObj: any = {};
+    
+    switch (movement.field_changed) {
+      case 'name':
+        updateObj.name = movement.new_value.toString();
+        break;
+      case 'box_to_kg_ratio':
+        updateObj.box_to_kg_ratio = movement.new_value;
+        // Recalculate derived values
+        const boxToKgRatio = movement.new_value;
+        updateObj.cost_per_kg = product.cost_per_box / boxToKgRatio;
+        updateObj.price_per_kg = product.price_per_box / boxToKgRatio;
+        updateObj.profit_per_kg = updateObj.price_per_kg - updateObj.cost_per_kg;
+        break;
+      case 'cost_per_box':
+        updateObj.cost_per_box = movement.new_value;
+        // Recalculate derived values
+        const costPerBox = movement.new_value;
+        updateObj.cost_per_kg = costPerBox / product.box_to_kg_ratio;
+        updateObj.profit_per_box = product.price_per_box - costPerBox;
+        updateObj.profit_per_kg = product.price_per_kg - updateObj.cost_per_kg;
+        break;
+      case 'price_per_box':
+        updateObj.price_per_box = movement.new_value;
+        // Recalculate derived values
+        const pricePerBox = movement.new_value;
+        updateObj.price_per_kg = pricePerBox / product.box_to_kg_ratio;
+        updateObj.profit_per_box = pricePerBox - product.cost_per_box;
+        updateObj.profit_per_kg = updateObj.price_per_kg - product.cost_per_kg;
+        break;
+    }
+
+    // Update the product
+    await ctx.db.patch(args.product_id, {
+      ...updateObj,
+      updated_at: Date.now(),
+    });
+
+    // Update the stock movement status to completed
+    await ctx.db.patch(movement._id, {
+      status: "completed",
+      updated_at: Date.now(),
+    });
+    
+    return args.product_id;
+  },
+});
+
+// Reject product edit request
+export const rejectProductEdit = mutation({
+  args: { 
+    movement_id: v.string(),
+    rejection_reason: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Update the stock movement status to rejected
+    const movement = await ctx.db.query("stock_movements")
+      .withIndex("by_user", q => q.eq("user_id", userId))
+      .filter(q => q.eq(q.field("movement_id"), args.movement_id))
+      .unique();
+      
+    if (!movement) {
+      throw new Error("Edit request not found");
+    }
+
+    // Update the stock movement status to rejected
+    const updateData: any = {
+      status: "rejected",
+      updated_at: Date.now(),
+    };
+
+    // Append rejection reason if provided
+    if (args.rejection_reason) {
+      updateData.reason = `${movement.reason} (Rejected: ${args.rejection_reason})`;
+    }
+
+    await ctx.db.patch(movement._id, updateData);
+    
+    return args.movement_id;
+  },
+});
+
 // Restock a product
 export const restock = mutation({
   args: {

@@ -86,16 +86,13 @@ export function LiveStock({
                         Box Ratio
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Selling Price per Box
+                        Selling
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Selling Price per KG
+                        Cost
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Cost per Box
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Cost per KG
+                        Profit
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
@@ -134,16 +131,22 @@ export function LiveStock({
                                 1:{product.box_to_kg_ratio || 0}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
-                                ${(product.price_per_box || 0).toFixed(2)}
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.price_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.price_per_kg || 0).toFixed(2)}</span>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
-                                ${(product.price_per_kg || 0).toFixed(2)}
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.cost_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.cost_per_kg || 0).toFixed(2)}</span>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
-                                ${(product.cost_per_box || 0).toFixed(2)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
-                                ${(product.cost_per_kg || 0).toFixed(2)}
+                                <div className="flex flex-col">
+                                    <span>Box: ${((product.price_per_box || 0) - (product.cost_per_box || 0)).toFixed(2)}</span>
+                                    <span>KG: ${((product.price_per_kg || 0) - (product.cost_per_kg || 0)).toFixed(2)}</span>
+                                </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                                 <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
@@ -191,7 +194,13 @@ export function LiveStock({
                         Box Ratio
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Pricing
+                        Selling
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Cost
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Profit
                     </th>
                 </tr>
             </thead>
@@ -220,19 +229,29 @@ export function LiveStock({
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
                                 1:{product.box_to_kg_ratio || 0}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    Box: ${(product.price_per_box || 0).toFixed(2)}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.price_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.price_per_kg || 0).toFixed(2)}</span>
                                 </div>
-                                <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    KG: ${(product.price_per_kg || 0).toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.cost_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.cost_per_kg || 0).toFixed(2)}</span>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${((product.price_per_box || 0) - (product.cost_per_box || 0)).toFixed(2)}</span>
+                                    <span>KG: ${((product.price_per_kg || 0) - (product.cost_per_kg || 0)).toFixed(2)}</span>
                                 </div>
                             </td>
                         </tr>
                     ))
                 ) : (
                     <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                             <div className="flex flex-col items-center gap-2">
                                 <Package size={40} className="text-gray-300 dark:text-gray-600 mb-2" />
                                 <p className="font-medium">No low stock products found</p>
@@ -359,7 +378,13 @@ export function LiveStock({
                         Box Ratio
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Pricing
+                        Selling
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Cost
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Profit
                     </th>
                 </tr>
             </thead>
@@ -401,19 +426,29 @@ export function LiveStock({
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
                                 1:{product.box_to_kg_ratio || 0}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    Box: ${(product.price_per_box || 0).toFixed(2)}
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.price_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.price_per_kg || 0).toFixed(2)}</span>
                                 </div>
-                                <div className="text-sm text-gray-900 dark:text-dark-text">
-                                    KG: ${(product.price_per_kg || 0).toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${(product.cost_per_box || 0).toFixed(2)}</span>
+                                    <span>KG: ${(product.cost_per_kg || 0).toFixed(2)}</span>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                <div className="flex flex-col">
+                                    <span>Box: ${((product.price_per_box || 0) - (product.cost_per_box || 0)).toFixed(2)}</span>
+                                    <span>KG: ${((product.price_per_kg || 0) - (product.cost_per_kg || 0)).toFixed(2)}</span>
                                 </div>
                             </td>
                         </tr>
                     ))
                 ) : (
                     <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                             <div className="flex flex-col items-center gap-2">
                                 <Package size={40} className="text-gray-300 dark:text-gray-600 mb-2" />
                                 <p className="font-medium">No products nearing expiry</p>

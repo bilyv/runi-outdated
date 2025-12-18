@@ -24,6 +24,12 @@ export function ManageSales() {
     payment_method: "",
     reason: ""
   });
+  
+  // State for delete modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [deleteErrors, setDeleteErrors] = useState<Record<string, string>>({});
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Helper function to format timestamp
@@ -48,17 +54,68 @@ export function ManageSales() {
   };
   
   // Handle delete sale
-  const handleDelete = async (saleId: string) => {
-    const reason = prompt("Please enter a reason for deleting this sale:");
-    if (!reason) {
-      alert("Deletion cancelled. A reason is required.");
+  const handleDelete = (saleId: string) => {
+    const sale = sales.find((s: any) => s._id === saleId);
+    if (sale) {
+      setCurrentSale(sale);
+      setDeleteReason("");
+      setDeleteErrors({});
+      setIsDeleteModalOpen(true);
+    }
+  };
+  
+  // Handle delete form submission
+  const handleDeleteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate reason
+    if (!deleteReason.trim()) {
+      setDeleteErrors({ reason: "Reason is required" });
       return;
     }
     
+    try {
+      await deleteSaleWithAudit({ 
+        saleId: currentSale._id, 
+        reason: deleteReason 
+      });
+      alert("Sale deletion request submitted for approval!");
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error("Error requesting sale deletion:", error);
+      alert("Failed to request sale deletion. Please try again.");
+    }
+  };
+  
+  // Close delete modal
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteReason("");
+    setDeleteErrors({});
+  };
+  
+  // Handle delete reason change
+  const handleDeleteReasonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDeleteReason(e.target.value);
+    if (deleteErrors.reason) {
+      setDeleteErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.reason;
+        return newErrors;
+      });
+    }
+  };
+  
+  // Confirm delete (after approval)
+  const confirmDelete = async () => {
     if (window.confirm("Are you sure you want to delete this sale? This will create an audit record for approval.")) {
       try {
-        await deleteSaleWithAudit({ saleId, reason });
+        await deleteSaleWithAudit({ 
+          saleId: currentSale._id, 
+          reason: deleteReason 
+        });
         alert("Sale deletion request submitted for approval!");
+        setIsDeleteModalOpen(false);
       } catch (error) {
         console.error("Error requesting sale deletion:", error);
         alert("Failed to request sale deletion. Please try again.");
@@ -327,6 +384,60 @@ export function ManageSales() {
                 <Button 
                   type="submit" 
                   variant="primary"
+                >
+                  Submit for Approval
+                </Button>
+              </div>
+            </div>
+          </form>
+        )}
+      </Modal>
+      
+      {/* Delete Sale Modal */}
+      <Modal 
+        isOpen={isDeleteModalOpen} 
+        onClose={closeDeleteModal}
+        title="Delete Sale"
+      >
+        {currentSale && (
+          <form onSubmit={handleDeleteSubmit}>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
+                  Product: {getProductName(currentSale.product_id)}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Are you sure you want to delete this sale? This action requires approval.
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text mb-1">
+                  Reason for Deletion <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={deleteReason}
+                  onChange={handleDeleteReasonChange}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-dark-text transition-colors ${deleteErrors.reason ? "border-red-300 focus:ring-red-500 focus:border-red-500" : "border-gray-300 dark:border-dark-border"}`}
+                  rows={4}
+                  placeholder="Enter reason for deleting this sale..."
+                />
+                {deleteErrors.reason && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{deleteErrors.reason}</p>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  onClick={closeDeleteModal}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="danger"
                 >
                   Submit for Approval
                 </Button>

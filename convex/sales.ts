@@ -131,11 +131,11 @@ export const deleteSaleWithAudit = mutation({
       audit_type: "deletion",
       boxes_change: {
         before: sale.boxes_quantity,
-        after: null,
+        after: undefined,
       },
       kg_change: {
         before: sale.kg_quantity,
-        after: null,
+        after: undefined,
       },
       old_values: {
         boxes_quantity: sale.boxes_quantity,

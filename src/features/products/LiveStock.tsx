@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Search, Filter, Package, AlertTriangle, Edit3, Trash2, Check, X } from "lucide-react";
 import { Input } from "../../components/ui/Input";
-import { useQuery } from "convex/react";
+import { Modal } from "../../components/ui/Modal";
+import { Button } from "../../components/ui/Button";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 interface LiveStockProps {
@@ -19,10 +21,21 @@ export function LiveStock({
 }: LiveStockProps) {
     const [currentView, setCurrentView] = useState("all");
     const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
+    const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [editForm, setEditForm] = useState({
+        name: "",
+        box_to_kg_ratio: "",
+        cost_per_box: "",
+        price_per_box: "",
+        reason: ""
+    });
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     // Fetch damaged products and stock movements
     const damagedProducts = useQuery(api.products.getDamagedProducts) || [];
     const stockMovements = useQuery(api.products.getStockMovements) || [];
+    const updateProduct = useMutation(api.products.update);
 
     // Helper to get category name
     const getCategoryName = (categoryId: string) => {
@@ -149,7 +162,10 @@ export function LiveStock({
                                 </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                                <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
+                                <button 
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
+                                    onClick={() => openEditModal(product)}
+                                >
                                     <Edit3 size={16} />
                                 </button>
                                 <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
@@ -584,6 +600,113 @@ export function LiveStock({
         }
     };
 
+    // Handle edit form changes
+    const handleEditFormChange = (field: string, value: string) => {
+        setEditForm(prev => ({ ...prev, [field]: value }));
+        
+        // Clear error when user types
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    // Open edit modal with product data
+    const openEditModal = (product: any) => {
+        setEditingProduct(product);
+        setEditForm({
+            name: product.name || "",
+            box_to_kg_ratio: product.box_to_kg_ratio?.toString() || "",
+            cost_per_box: product.cost_per_box?.toString() || "",
+            price_per_box: product.price_per_box?.toString() || "",
+            reason: ""
+        });
+        setErrors({});
+        setIsEditProductOpen(true);
+    };
+
+    // Close edit modal
+    const closeEditModal = () => {
+        setIsEditProductOpen(false);
+        setEditingProduct(null);
+        setEditForm({
+            name: "",
+            box_to_kg_ratio: "",
+            cost_per_box: "",
+            price_per_box: "",
+            reason: ""
+        });
+        setErrors({});
+    };
+
+    // Validate edit product form
+    const validateEditProductForm = () => {
+        const newErrors: Record<string, string> = {};
+        
+        if (!editForm.name.trim()) {
+            newErrors.name = "Product name is required";
+        }
+        
+        if (!editForm.box_to_kg_ratio || isNaN(Number(editForm.box_to_kg_ratio)) || Number(editForm.box_to_kg_ratio) <= 0) {
+            newErrors.box_to_kg_ratio = "Valid box to kg ratio is required";
+        }
+        
+        if (!editForm.cost_per_box || isNaN(Number(editForm.cost_per_box)) || Number(editForm.cost_per_box) < 0) {
+            newErrors.cost_per_box = "Valid cost per box is required";
+        }
+        
+        if (!editForm.price_per_box || isNaN(Number(editForm.price_per_box)) || Number(editForm.price_per_box) < 0) {
+            newErrors.price_per_box = "Valid sell price per box is required";
+        }
+        
+        if (!editForm.reason.trim()) {
+            newErrors.reason = "Reason for changes is required";
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    // Handle edit product submit
+    const handleEditProductSubmit = async () => {
+        if (validateEditProductForm() && editingProduct) {
+            try {
+                // Calculate derived values
+                const boxToKgRatio = Number(editForm.box_to_kg_ratio);
+                const costPerBox = Number(editForm.cost_per_box);
+                const costPerKg = boxToKgRatio > 0 ? costPerBox / boxToKgRatio : 0;
+                const pricePerBox = Number(editForm.price_per_box);
+                const pricePerKg = boxToKgRatio > 0 ? pricePerBox / boxToKgRatio : 0;
+                const profitPerBox = pricePerBox - costPerBox;
+                const profitPerKg = pricePerKg - costPerKg;
+                
+                await updateProduct({
+                    id: editingProduct._id,
+                    name: editForm.name,
+                    box_to_kg_ratio: boxToKgRatio,
+                    cost_per_box: costPerBox,
+                    cost_per_kg: costPerKg,
+                    price_per_box: pricePerBox,
+                    price_per_kg: pricePerKg,
+                    profit_per_box: profitPerBox,
+                    profit_per_kg: profitPerKg
+                });
+                
+                // Record stock movement for the change
+                // In a real implementation, you would call a mutation to record this
+                
+                alert("Product updated successfully!");
+                closeEditModal();
+            } catch (error: any) {
+                console.error("Error updating product:", error);
+                alert("Failed to update product: " + (error.message || "Unknown error"));
+            }
+        }
+    };
+
     return (
         <div className="space-y-4">
             {/* Toolbar */}
@@ -644,6 +767,179 @@ export function LiveStock({
                     {renderCurrentView()}
                 </div>
             </div>
+
+            {/* Edit Product Modal */}
+            <Modal 
+                isOpen={isEditProductOpen} 
+                onClose={closeEditModal} 
+                title="Edit Product"
+            >
+                <div className="bg-white dark:bg-dark-card rounded-lg shadow-lg overflow-hidden">
+                    <div className="p-4 space-y-5 max-h-[70vh] overflow-y-auto">
+                        {/* Header */}
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text">Edit Product</h2>
+                        </div>
+                        
+                        {/* Edit Product Form */}
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                        Product Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editForm.name}
+                                        onChange={(e) => handleEditFormChange('name', e.target.value)}
+                                        className={`w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors ${
+                                            errors.name ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""
+                                        }`}
+                                        placeholder="Enter product name"
+                                    />
+                                    {errors.name && (
+                                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.name}</p>
+                                    )}
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                        Box to KG Ratio <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={editForm.box_to_kg_ratio}
+                                        onChange={(e) => handleEditFormChange('box_to_kg_ratio', e.target.value)}
+                                        className={`w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors ${
+                                            errors.box_to_kg_ratio ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""
+                                        }`}
+                                        placeholder="Enter box to kg ratio"
+                                    />
+                                    {errors.box_to_kg_ratio && (
+                                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.box_to_kg_ratio}</p>
+                                    )}
+                                </div>
+                                
+                                {/* Cost Pricing */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-text">Cost Pricing</h3>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                            Cost per Box ($) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editForm.cost_per_box}
+                                            onChange={(e) => handleEditFormChange('cost_per_box', e.target.value)}
+                                            className={`w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors ${
+                                                errors.cost_per_box ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""
+                                            }`}
+                                            placeholder="$0.00"
+                                        />
+                                        {errors.cost_per_box && (
+                                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.cost_per_box}</p>
+                                        )}
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                            Cost per Kg ($)
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                            <input
+                                                type="number"
+                                                value={editForm.box_to_kg_ratio && editForm.cost_per_box ? 
+                                                    (Number(editForm.cost_per_box) / Number(editForm.box_to_kg_ratio)).toFixed(2) : ''}
+                                                readOnly
+                                                className="w-full pl-5 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors bg-gray-100 dark:bg-dark-bg/50 cursor-not-allowed"
+                                                placeholder="Auto calculated"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Selling Pricing */}
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-dark-text">Selling Pricing</h3>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                            Sell per Box ($) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={editForm.price_per_box}
+                                            onChange={(e) => handleEditFormChange('price_per_box', e.target.value)}
+                                            className={`w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors ${
+                                                errors.price_per_box ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""
+                                            }`}
+                                            placeholder="$0.00"
+                                        />
+                                        {errors.price_per_box && (
+                                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.price_per_box}</p>
+                                        )}
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                            Sell per Kg ($)
+                                        </label>
+                                        <div className="relative">
+                                            <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs">$</span>
+                                            <input
+                                                type="number"
+                                                value={editForm.box_to_kg_ratio && editForm.price_per_box ? 
+                                                    (Number(editForm.price_per_box) / Number(editForm.box_to_kg_ratio)).toFixed(2) : ''}
+                                                readOnly
+                                                className="w-full pl-5 px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors bg-gray-100 dark:bg-dark-bg/50 cursor-not-allowed"
+                                                placeholder="Auto calculated"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-dark-text mb-1">
+                                        Reason for Changes <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        value={editForm.reason}
+                                        onChange={(e) => handleEditFormChange('reason', e.target.value)}
+                                        className={`w-full px-2.5 py-1.5 text-sm border border-gray-300 dark:border-dark-border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-bg dark:text-dark-text transition-colors ${
+                                            errors.reason ? "border-red-300 focus:ring-red-500 focus:border-red-500" : ""
+                                        }`}
+                                        rows={3}
+                                        placeholder="Explain the reason for these changes"
+                                    />
+                                    {errors.reason && (
+                                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.reason}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex justify-end gap-2 pt-2">
+                            <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={closeEditModal}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                size="sm"
+                                onClick={handleEditProductSubmit}
+                            >
+                                Save Changes
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

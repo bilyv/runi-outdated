@@ -1,6 +1,5 @@
 import { UserProfile } from "./UserProfile";
 import { ThemeSettings } from "./ThemeSettings";
-import { AccountDetails } from "./AccountDetails";
 
 export function Settings() {
   return (
@@ -15,9 +14,6 @@ export function Settings() {
         
         {/* Theme Settings Section */}
         <ThemeSettings />
-        
-        {/* Account Details Section */}
-        <AccountDetails />
       </div>
     </div>
   );

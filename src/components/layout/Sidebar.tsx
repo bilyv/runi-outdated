@@ -27,7 +27,7 @@ const modules = [
   { id: "documents" as const, label: "Documents", icon: FileText },
   { id: "reports" as const, label: "Reports & Analytics", icon: TrendingUp },
   { id: "users" as const, label: "Users & Roles", icon: UserCheck },
-  { id: "settings" as const, label: "Settings", icon: SettingsIcon },
+  { id: "settings" as const, label: "Account Settings", icon: SettingsIcon },
 ];
 
 export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {

@@ -32,9 +32,10 @@ export function LiveStock({
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Fetch damaged products and stock movements
+    // Fetch damaged products, stock movements, and restock records
     const damagedProducts = useQuery(api.products.getDamagedProducts) || [];
     const stockMovements = useQuery(api.products.getStockMovements) || [];
+    const restockRecords = useQuery(api.products.getRestockRecords) || [];
     const updateProduct = useMutation(api.products.update);
 
     // Helper to get category name
@@ -72,6 +73,7 @@ export function LiveStock({
         { id: "damaged", label: "Damaged Products View" },
         { id: "nearingExpiry", label: "Nearing Expiry View" },
         { id: "stockAdjustment", label: "Stock Adjustment View" },
+        { id: "restock", label: "Restock Records View" },
     ];
 
     const getCurrentViewLabel = () => {
@@ -582,6 +584,89 @@ export function LiveStock({
         </table>
     );
 
+    // Render Restock Records View
+    const renderRestockView = () => (
+        <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-dark-card border-b border-gray-200 dark:border-dark-border">
+                <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Product
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Boxes Added
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Kg Added
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Total Cost
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Delivery Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Performed By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
+                {restockRecords?.length > 0 ? (
+                    restockRecords.map((restock: any, index: number) => (
+                        <tr key={restock.addition_id} className={index % 2 === 0 ? "bg-white dark:bg-dark-card" : "bg-gray-50 dark:bg-dark-card/50"}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                {new Date(restock.updated_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:underline">
+                                    {restock.product_name}
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                {restock.boxes_added}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                {restock.kg_added}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                ${restock.total_cost.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                {restock.delivery_date}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-dark-text">
+                                {restock.performed_by}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${restock.status === "completed"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                                    }`}>
+                                    {restock.status}
+                                </span>
+                            </td>
+                        </tr>
+                    ))
+                ) : (
+                    <tr>
+                        <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                            <div className="flex flex-col items-center gap-2">
+                                <Package size={40} className="text-gray-300 dark:text-gray-600 mb-2" />
+                                <p className="font-medium">No restock records found</p>
+                                <p className="text-sm">No restock activities have been recorded yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+    );
+
     // Render the appropriate view based on currentView
     const renderCurrentView = () => {
         switch (currentView) {
@@ -595,6 +680,8 @@ export function LiveStock({
                 return renderNearingExpiryView();
             case "stockAdjustment":
                 return renderStockAdjustmentView();
+            case "restock":
+                return renderRestockView();
             default:
                 return renderAllProductsView();
         }

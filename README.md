@@ -147,7 +147,7 @@ The application uses Convex as its backend database with the following key table
 - `files` - Individual file records
 
 **Tracking & Monitoring Tables:**
-- `stock_additions` - New inventory additions
+- `restock` - New inventory additions
 - `stock_corrections` - Inventory adjustments
 - `damaged_products` - Damaged inventory tracking
 - `stock_movements` - All inventory movements

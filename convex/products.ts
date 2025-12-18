@@ -186,6 +186,36 @@ export const getStockMovements = query({
   },
 });
 
+// Get restock records
+export const getRestockRecords = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const restocks = await ctx.db
+      .query("restock")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    // Fetch product details for each restock
+    const products = await ctx.db
+      .query("products")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .collect();
+
+    // Combine restocks with product details
+    return restocks.map(restock => {
+      const product = products.find(p => p._id === restock.product_id);
+      return {
+        ...restock,
+        product_name: product ? product.name : "Unknown Product",
+        product_category_id: product ? product.category_id : null,
+      };
+    });
+  },
+});
+
 export const deleteProduct = mutation({
   args: { id: v.id("products") },
   handler: async (ctx, args) => {
@@ -237,12 +267,28 @@ export const restock = mutation({
       updated_at: Date.now(),
     });
 
+    // Record the stock movement
+    await ctx.db.insert("stock_movements", {
+      movement_id: `movement_${Date.now()}`,
+      user_id: userId,
+      product_id: args.id,
+      movement_type: "restock",
+      box_change: args.boxes_amount,
+      kg_change: args.kg_amount,
+      old_value: product.quantity_box,
+      new_value: newQuantityBox,
+      reason: `Restocked ${args.boxes_amount} boxes and ${args.kg_amount} kg`,
+      status: "completed",
+      performed: "User", // In a real app, this would be the actual user
+      updated_at: Date.now(),
+    });
+
     return args.id;
   },
 });
 
-// Record stock addition
-export const recordStockAddition = mutation({
+// Record restock
+export const recordRestock = mutation({
   args: {
     addition_id: v.string(),
     product_id: v.id("products"),
@@ -257,7 +303,7 @@ export const recordStockAddition = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
 
-    return await ctx.db.insert("stock_additions", {
+    return await ctx.db.insert("restock", {
       ...args,
       user_id: userId,
       updated_at: Date.now(),
@@ -325,7 +371,7 @@ export const recordStockMovement = mutation({
     old_value: v.number(),
     new_value: v.number(),
     damaged_id: v.optional(v.id("damaged_products")),
-    stock_addition_id: v.optional(v.id("stock_additions")),
+    restock_id: v.optional(v.id("restock")),
     correction_id: v.optional(v.id("stock_corrections")),
     reason: v.string(),
     status: v.string(),

@@ -23,6 +23,7 @@ export function ProductAdding({}: ProductAddingProps) {
   const createProduct = useMutation(api.products.create);
   const updateProduct = useMutation(api.products.update);
   const restockProduct = useMutation(api.products.restock);
+  const recordRestock = useMutation(api.products.recordRestock);
   const recordDamagedProduct = useMutation(api.products.recordDamagedProduct);
   const recordStockCorrection = useMutation(api.products.recordStockCorrection);
   
@@ -312,12 +313,32 @@ export function ProductAdding({}: ProductAddingProps) {
         const boxesAmount = Number(restockForm.boxes_amount);
         const kgAmount = Number(restockForm.kg_amount);
         
+        // Get the selected product to calculate total cost
+        const selectedProduct = products.find(p => p._id === restockForm.product_id);
+        let totalCost = 0;
+        if (selectedProduct) {
+          totalCost = (boxesAmount * selectedProduct.cost_per_box) + (kgAmount * selectedProduct.cost_per_kg);
+        }
+        
+        // Update product quantities
         await restockProduct({
           id: restockForm.product_id as any,
           boxes_amount: boxesAmount,
           kg_amount: kgAmount,
           delivery_date: restockForm.delivery_date,
           expiry_date: restockForm.expiry_date
+        });
+        
+        // Record the restock transaction
+        await recordRestock({
+          addition_id: `restock_${Date.now()}`,
+          product_id: restockForm.product_id as any,
+          boxes_added: boxesAmount,
+          kg_added: kgAmount,
+          total_cost: totalCost,
+          delivery_date: restockForm.delivery_date,
+          status: "completed",
+          performed_by: "User" // In a real app, this would be the actual user
         });
         
         alert("Restock recorded successfully!");

@@ -57,8 +57,8 @@ const applicationTables = {
     .index("by_user_and_name", ["user_id", "category_name"]),
 
 
-  // Stock Additions
-  stock_additions: defineTable({
+  // Restock
+  restock: defineTable({
     addition_id: v.string(),
     product_id: v.id("products"),
     user_id: v.id("users"),
@@ -119,7 +119,7 @@ const applicationTables = {
     old_value: v.number(),
     new_value: v.number(),
     damaged_id: v.optional(v.id("damaged_products")),
-    stock_addition_id: v.optional(v.id("stock_additions")),
+    restock_id: v.optional(v.id("restock")),
     correction_id: v.optional(v.id("stock_corrections")),
     reason: v.string(),
     status: v.string(),

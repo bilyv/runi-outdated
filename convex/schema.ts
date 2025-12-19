@@ -284,7 +284,7 @@ const applicationTables = {
   // Deposit
   deposit: defineTable({
     deposit_id: v.string(),
-    user_id: v.string(),
+    user_id: v.id("users"),
     deposit_type: v.string(),
     account_name: v.string(),
     account_number: v.string(),
@@ -292,9 +292,9 @@ const applicationTables = {
     to_recipient: v.string(),
     deposit_image_url: v.string(),
     approval: v.string(),
-    created_by: v.string(),
+    created_by: v.id("users"),
     updated_at: v.number(),
-    updated_by: v.string(),
+    updated_by: v.id("users"),
   })
     .index("by_user_id", ["user_id"]) 
     .index("by_deposit_id", ["deposit_id"]),

@@ -124,3 +124,11 @@ export const deleteFile = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+// Get URL for a storage ID
+export const getUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});

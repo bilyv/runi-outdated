@@ -296,8 +296,25 @@ const applicationTables = {
     updated_at: v.number(),
     updated_by: v.string(),
   })
-    .index("by_user_id", ["user_id"]) 
+    .index("by_user_id", ["user_id"])
     .index("by_deposit_id", ["deposit_id"]),
+
+  // Staff
+  staff: defineTable({
+    staff_id: v.string(),
+    user_id: v.id("users"),
+    staff_full_name: v.string(),
+    phone_number: v.string(),
+    id_card_front_url: v.string(),
+    id_card_back_url: v.string(),
+    password: v.string(),
+    session: v.optional(v.string()),
+    failed_login_attempts: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    .index("by_staff_id", ["staff_id"])
+    .index("by_phone", ["phone_number"]),
 };
 
 export default defineSchema({

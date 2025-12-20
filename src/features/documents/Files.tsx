@@ -6,7 +6,7 @@ import { Modal } from "../../components/ui/Modal";
 import { motion } from "framer-motion";
 
 interface FileType {
-  _id: string;
+  _id: any;
   file_name: string;
   file_url: string;
   file_type: string;
@@ -15,31 +15,37 @@ interface FileType {
   folder_id?: string;
 }
 
-export function Files() {
+interface FilesProps {
+  folderId?: any;
+  folderName?: string;
+  onBack?: () => void;
+}
+
+export function Files({ folderId, folderName, onBack }: FilesProps) {
   const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<FileType | null>(null);
-  
-  const files = useQuery(api.files.list, { folderId: undefined }) || [];
+
+  const files = useQuery(api.files.list, { folderId: folderId as any }) || [];
   const deleteFile = useMutation(api.files.deleteFile);
-  
+
   const handleViewFile = (file: FileType) => {
     setSelectedFile(file);
     setIsViewModalOpen(true);
   };
-  
+
   const handleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setSelectedFile(null);
   };
-  
+
   const handleDeleteClick = (e: React.MouseEvent, file: FileType) => {
     e.stopPropagation();
     setFileToDelete(file);
     setIsDeleteConfirmOpen(true);
   };
-  
+
   const handleConfirmDelete = async () => {
     if (fileToDelete) {
       try {
@@ -51,12 +57,12 @@ export function Files() {
       }
     }
   };
-  
+
   const handleCancelDelete = () => {
     setIsDeleteConfirmOpen(false);
     setFileToDelete(null);
   };
-  
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -64,23 +70,37 @@ export function Files() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString();
   };
-  
+
   const isImageFile = (fileType: string) => {
     return fileType.startsWith('image/');
   };
-  
+
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-dark-text tracking-tight">All Files</h2>
-      
+      <div className="flex items-center gap-4">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </button>
+        )}
+        <h2 className="text-xl font-display font-semibold text-gray-900 dark:text-dark-text tracking-tight">
+          {folderName ? `Files in ${folderName}` : "All Files"}
+        </h2>
+      </div>
+
       {files.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {files.map((file: FileType) => (
-            <motion.div 
+            <motion.div
               key={file._id}
               whileHover={{ y: -4 }}
               onClick={() => handleViewFile(file)}
@@ -98,7 +118,7 @@ export function Files() {
                     </svg>
                   )}
                 </div>
-                <button 
+                <button
                   onClick={(e) => handleDeleteClick(e, file)}
                   className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 duration-300"
                 >
@@ -107,7 +127,7 @@ export function Files() {
                   </svg>
                 </button>
               </div>
-              
+
               <div className="min-w-0">
                 <h3 className="font-display font-semibold text-gray-900 dark:text-dark-text text-lg truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {file.file_name}
@@ -139,11 +159,11 @@ export function Files() {
           <p className="text-gray-500 dark:text-gray-400 mb-0 max-w-xs mx-auto">Upload documents to manage them efficiently in one place.</p>
         </div>
       )}
-      
+
       {/* File View Modal */}
-      <Modal 
-        isOpen={isViewModalOpen} 
-        onClose={handleCloseViewModal} 
+      <Modal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
         title={selectedFile?.file_name || "File Preview"}
       >
         {selectedFile && (
@@ -152,11 +172,11 @@ export function Files() {
               <span className="mr-4">Type: {selectedFile.file_type}</span>
               <span>Size: {formatFileSize(selectedFile.file_size)}</span>
             </div>
-            
+
             <div className="border border-gray-200 dark:border-dark-border rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-800 flex items-center justify-center min-h-[300px]">
               {isImageFile(selectedFile.file_type) ? (
-                <img 
-                  src={selectedFile.file_url} 
+                <img
+                  src={selectedFile.file_url}
                   alt={selectedFile.file_name}
                   className="max-h-[70vh] max-w-full object-contain"
                 />
@@ -170,17 +190,17 @@ export function Files() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end gap-2 pt-2">
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 onClick={handleCloseViewModal}
               >
                 Close
               </Button>
-              <a 
-                href={selectedFile.file_url} 
-                target="_blank" 
+              <a
+                href={selectedFile.file_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-700 dark:hover:bg-blue-800"
               >
@@ -190,25 +210,25 @@ export function Files() {
           </div>
         )}
       </Modal>
-      
+
       {/* Delete Confirmation Modal */}
-      <Modal 
-        isOpen={isDeleteConfirmOpen} 
-        onClose={handleCancelDelete} 
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onClose={handleCancelDelete}
         title="Delete File"
       >
         <div className="space-y-4">
           <p>Are you sure you want to delete the file <strong>{fileToDelete?.file_name}</strong>? This action cannot be undone.</p>
-          
+
           <div className="flex justify-end gap-2 pt-2">
-            <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={handleCancelDelete}
             >
               Cancel
             </Button>
-            <Button 
-              variant="danger" 
+            <Button
+              variant="danger"
               onClick={handleConfirmDelete}
             >
               Delete

@@ -1,49 +1,61 @@
-import { useState } from "react";
 import { UserProfile } from "./UserProfile";
 import { ThemeSettings } from "./ThemeSettings";
-import { SubTabs } from "../../components/ui/SubTabs";
-import { motion, AnimatePresence } from "framer-motion";
-
-type TabType = "profile" | "appearance";
+import { motion } from "framer-motion";
+import { User, Palette, Settings as SettingsIcon } from "lucide-react";
 
 export function Settings() {
-  const [activeTab, setActiveTab] = useState<TabType>("profile");
+  return (
+    <div className="max-w-5xl mx-auto space-y-12 pb-20">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="inline-flex p-3 bg-blue-500/10 rounded-2xl text-blue-600 dark:text-blue-400 mb-2"
+        >
+          <SettingsIcon size={24} />
+        </motion.div>
+        <h1 className="text-4xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
+          System Settings
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 font-sans text-lg max-w-2xl mx-auto">
+          Personalize your experience and manage your account security and appearance from one central place.
+        </p>
+      </div>
 
-  const tabs = [
-    { id: "profile", label: "My Profile" },
-    { id: "appearance", label: "Appearance" },
-  ];
+      <div className="grid grid-cols-1 gap-12">
+        {/* Profile Section */}
+        <section className="space-y-6">
+          <div className="flex items-center space-x-3 px-2">
+            <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
+              <User size={20} />
+            </div>
+            <h2 className="text-2xl font-bold font-display tracking-tight text-gray-900 dark:text-white">Account Profile</h2>
+          </div>
+          <div className="bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-[2.5rem] border border-white/40 dark:border-white/10 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <UserProfile />
+          </div>
+        </section>
 
-    return (
-      <div className="p-6 space-y-8 max-w-7xl mx-auto">
-        <div className="text-center">
-          <h1 className="text-4xl font-display font-bold text-gray-900 dark:text-dark-text tracking-tight">
-            Settings
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-2 font-body text-lg">
-            Manage your personal preferences and account details.
-          </p>
-        </div>
-        
-        <SubTabs 
-          tabs={tabs} 
-          activeTab={activeTab} 
-          onChange={(id) => setActiveTab(id as TabType)} 
-        />
-        
-        <div className="relative min-h-[500px]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            {activeTab === "profile" && <UserProfile />}
-            {activeTab === "appearance" && <ThemeSettings />}
-          </motion.div>
-        </AnimatePresence>
+        {/* Appearance Section */}
+        <section className="space-y-6">
+          <div className="flex items-center space-x-3 px-2">
+            <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
+              <Palette size={20} />
+            </div>
+            <h2 className="text-2xl font-bold font-display tracking-tight text-gray-900 dark:text-white">Appearance & Theme</h2>
+          </div>
+          <div className="bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-[2.5rem] border border-white/40 dark:border-white/10 p-8 shadow-sm hover:shadow-md transition-shadow">
+            <ThemeSettings />
+          </div>
+        </section>
+      </div>
+
+      {/* Footer Info */}
+      <div className="pt-8 text-center border-t border-gray-100 dark:border-white/5">
+        <p className="text-sm text-gray-400 font-sans">
+          All changes are saved automatically to your account.
+        </p>
       </div>
     </div>
   );

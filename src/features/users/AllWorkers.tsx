@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
+import { Search, Mail, Phone, Briefcase, Calendar, Shield, MoreVertical } from "lucide-react";
+import { Table, TableRow, TableCell } from "../../components/ui/Table";
 
 interface Worker {
   _id: Id<"users">;
@@ -40,7 +42,11 @@ export function AllWorkers() {
   }, [searchTerm, workers]);
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString();
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
   };
 
   if (isLoading) {
@@ -52,107 +58,108 @@ export function AllWorkers() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text">All Workers</h2>
-        <div className="w-full sm:w-auto">
-          <input
-            type="text"
-            placeholder="Search workers..."
-            className="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-dark-card dark:text-dark-text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div className="space-y-8">
+      {/* Search Header */}
+      <div className="bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-[2.5rem] border border-white/40 dark:border-white/10 p-8 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold font-display tracking-tight text-gray-900 dark:text-white">Team Members</h2>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-sans">Manage and monitor your workforce</p>
+          </div>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search by name, email..."
+              className="w-full pl-12 pr-4 py-3 bg-white/50 dark:bg-black/20 border border-white/40 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-sans text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
-      {filteredWorkers.length === 0 ? (
-        <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border p-12 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
-              {searchTerm ? "No workers found" : "No workers yet"}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              {searchTerm 
-                ? "Try adjusting your search term." 
-                : "Workers you add will appear here."
-              }
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-dark-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-border">
-              <thead className="bg-gray-50 dark:bg-dark-card">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Worker</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Login</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-dark-border">
-                {filteredWorkers.map((worker) => (
-                  <tr key={worker._id} className="hover:bg-gray-50 dark:hover:bg-dark-card/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <span className="text-blue-800 dark:text-blue-400 font-medium">
-                            {worker.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-dark-text">{worker.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{worker.businessName || "No business"}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-dark-text">{worker.email}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {worker.phone || "No phone"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        {worker.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        worker.isActive 
-                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
-                          : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                      }`}>
-                        {worker.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(worker.lastLogin)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3">
-                        Edit
-                      </button>
-                      <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
-                        Deactivate
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <Table 
+        headers={["Worker", "Contact Information", "Role", "Status", "Last Active", "Actions"]}
+        count={filteredWorkers.length}
+      >
+        {filteredWorkers.length === 0 ? (
+          <tr>
+            <td colSpan={6} className="px-8 py-16 text-center text-gray-400 font-sans italic">
+              {searchTerm ? "No workers matching your search." : "Your team list is currently empty."}
+            </td>
+          </tr>
+        ) : (
+          filteredWorkers.map((worker) => (
+            <TableRow key={worker._id}>
+              <TableCell>
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold font-display text-lg shadow-lg shadow-blue-500/20">
+                      {worker.name.charAt(0).toUpperCase()}
+                    </div>
+                    {worker.isActive && (
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white dark:border-gray-900 rounded-full" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-base font-bold text-gray-900 dark:text-white font-display leading-tight">{worker.name}</div>
+                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
+                      <Briefcase className="w-3 h-3 mr-1" />
+                      {worker.businessName || "Independent"}
+                    </div>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="space-y-1.5">
+                  <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 font-medium">
+                    <Mail className="w-3 h-3 mr-2 text-blue-500/70" />
+                    {worker.email}
+                  </div>
+                  <div className="flex items-center text-xs text-gray-500 dark:text-gray-500 font-medium">
+                    <Phone className="w-3 h-3 mr-2 text-indigo-500/70" />
+                    {worker.phone || "Not provided"}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-xl w-fit">
+                  <Shield className="w-3 h-3 mr-2 text-blue-600 dark:text-blue-400" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 font-display">
+                    {worker.role}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${
+                  worker.isActive 
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" 
+                    : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                }`}>
+                  {worker.isActive ? "Active" : "Inactive"}
+                </span>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  <Calendar className="w-3 h-3 mr-2" />
+                  {formatDate(worker.lastLogin)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  <button className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 transition-all">
+                    <Edit size={16} />
+                  </button>
+                  <button className="p-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:text-red-400 transition-all">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </Table>
     </div>
   );
 }

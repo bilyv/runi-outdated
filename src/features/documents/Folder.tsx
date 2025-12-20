@@ -4,8 +4,9 @@ import { api } from "../../../convex/_generated/api";
 import { Button } from "../../components/ui/Button";
 import { Modal } from "../../components/ui/Modal";
 import { Input } from "../../components/ui/Input";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Files } from "./Files";
+import { Upload } from "./Upload";
 
 interface FolderType {
   _id: any;
@@ -24,6 +25,7 @@ export function Folder() {
   const [editFolderName, setEditFolderName] = useState("");
   const [error, setError] = useState("");
   const [viewingFolder, setViewingFolder] = useState<{ id: any, name: string } | null>(null);
+  const [isUploadSectionOpen, setIsUploadSectionOpen] = useState(false);
 
   // Fetch folders from Convex
   const folders = useQuery(api.folders.list) || [];
@@ -116,11 +118,56 @@ export function Folder() {
 
   if (viewingFolder) {
     return (
-      <Files
-        folderId={viewingFolder.id}
-        folderName={viewingFolder.name}
-        onBack={() => setViewingFolder(null)}
-      />
+      <div className="space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                setViewingFolder(null);
+                setIsUploadSectionOpen(false);
+              }}
+              className="p-2 -ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors bg-gray-100 dark:bg-gray-800 rounded-full"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-dark-text tracking-tight">
+              {viewingFolder.name}
+            </h2>
+          </div>
+          <Button
+            variant={isUploadSectionOpen ? "secondary" : "primary"}
+            onClick={() => setIsUploadSectionOpen(!isUploadSectionOpen)}
+            className="shadow-lg"
+          >
+            {isUploadSectionOpen ? "Cancel Upload" : "Upload File"}
+          </Button>
+        </div>
+
+        <AnimatePresence>
+          {isUploadSectionOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-gray-50 dark:bg-gray-900/40 rounded-3xl p-6 border border-gray-200 dark:border-dark-border">
+                <Upload
+                  folderId={viewingFolder.id}
+                  onUploadComplete={() => setIsUploadSectionOpen(false)}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Files
+          folderId={viewingFolder.id}
+          folderName={viewingFolder.name}
+        />
+      </div>
     );
   }
 

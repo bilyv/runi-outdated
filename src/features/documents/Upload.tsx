@@ -5,26 +5,21 @@ import { Button } from "../../components/ui/Button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface FolderType {
-  _id: string;
-  folder_name: string;
-  file_count: number;
-  total_size: number;
-  updated_at: number;
+interface UploadProps {
+  folderId: any;
+  onUploadComplete?: () => void;
 }
 
-export function Upload() {
+export function Upload({ folderId, onUploadComplete }: UploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedFolderId, setSelectedFolderId] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const folders = useQuery(api.folders.list) || [];
+
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createFile = useMutation(api.files.create);
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -52,21 +47,21 @@ export function Upload() {
       setError("");
     }
   };
-  
+
   const handleUpload = async () => {
     if (!selectedFile) {
       setError("Please select a file to upload");
       return;
     }
-    
-    if (!selectedFolderId) {
-      setError("Please select a folder for the file");
+
+    if (!folderId) {
+      setError("No destination folder specified");
       return;
     }
-    
+
     setIsUploading(true);
     setError("");
-    
+
     try {
       const postUrl = await generateUploadUrl();
       const uploadResponse = await fetch(postUrl, {
@@ -74,21 +69,21 @@ export function Upload() {
         headers: { "Content-Type": selectedFile.type },
         body: selectedFile,
       });
-      
+
       if (!uploadResponse.ok) throw new Error(`Upload failed: ${uploadResponse.statusText}`);
-      
+
       const { storageId } = await uploadResponse.json();
       await createFile({
         storageId,
         fileName: selectedFile.name,
         fileType: selectedFile.type,
         fileSize: selectedFile.size,
-        folderId: selectedFolderId || undefined,
+        folderId: folderId,
       });
-      
+
       toast.success(`Successfully uploaded ${selectedFile.name}`);
       setSelectedFile(null);
-      setSelectedFolderId("");
+      if (onUploadComplete) onUploadComplete();
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err: any) {
       setError(err.message || "Failed to upload file");
@@ -97,7 +92,7 @@ export function Upload() {
       setIsUploading(false);
     }
   };
-  
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -105,14 +100,13 @@ export function Upload() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-  
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="text-center">
-        <h2 className="text-2xl font-display font-bold text-gray-900 dark:text-dark-text tracking-tight">Upload Documents</h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-1 font-body">Add new files to your secure cloud storage.</p>
+        <h2 className="text-xl font-display font-bold text-gray-900 dark:text-dark-text tracking-tight">Upload to this Folder</h2>
       </div>
-      
+
       <div className="bg-white dark:bg-dark-card rounded-3xl border border-gray-200 dark:border-dark-border p-8 shadow-sm">
         <div className="space-y-8">
           {/* Custom Drop Zone */}
@@ -121,7 +115,7 @@ export function Upload() {
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            animate={{ 
+            animate={{
               borderColor: isDragging ? "rgb(37, 99, 235)" : "rgb(229, 231, 235)",
               backgroundColor: isDragging ? "rgba(37, 99, 235, 0.05)" : "transparent"
             }}
@@ -133,7 +127,7 @@ export function Upload() {
               onChange={handleFileChange}
               className="hidden"
             />
-            
+
             <div className={`
               border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300
               ${selectedFile ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 hover:border-blue-400'}
@@ -143,7 +137,7 @@ export function Upload() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              
+
               <AnimatePresence mode="wait">
                 {selectedFile ? (
                   <motion.div
@@ -154,7 +148,7 @@ export function Upload() {
                   >
                     <h3 className="text-lg font-display font-bold text-gray-900 dark:text-dark-text mb-1">{selectedFile.name}</h3>
                     <p className="text-sm text-blue-600 font-medium">{formatFileSize(selectedFile.size)}</p>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedFile(null);
@@ -178,31 +172,11 @@ export function Upload() {
               </AnimatePresence>
             </div>
           </motion.div>
-          
-          <div className="grid grid-cols-1 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 dark:text-dark-text mb-2 ml-1">
-                Destination Folder
-              </label>
-              <select
-                value={selectedFolderId}
-                onChange={(e) => setSelectedFolderId(e.target.value)}
-                className="w-full h-12 px-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
-                disabled={isUploading}
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.25rem' }}
-              >
-                <option value="">Select a folder...</option>
-                {folders.map((folder: FolderType) => (
-                  <option key={folder._id} value={folder._id}>
-                    {folder.folder_name} ({folder.file_count} files)
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          
+
+          {/* Folder selection removed as it's handled by context */}
+
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl"
@@ -213,11 +187,11 @@ export function Upload() {
               <span className="text-sm font-medium text-red-800 dark:text-red-200">{error}</span>
             </motion.div>
           )}
-          
-          <Button 
-            variant="primary" 
+
+          <Button
+            variant="primary"
             onClick={handleUpload}
-            disabled={isUploading || !selectedFile || !selectedFolderId}
+            disabled={isUploading || !selectedFile}
             className="w-full h-14 rounded-xl text-lg font-bold shadow-xl shadow-blue-500/20 disabled:shadow-none transition-all active:scale-[0.98]"
           >
             {isUploading ? (

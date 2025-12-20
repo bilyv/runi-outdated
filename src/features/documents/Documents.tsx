@@ -1,17 +1,15 @@
 import { useState } from "react";
 import { Folder } from "./Folder";
-import { Upload } from "./Upload";
 import { SubTabs } from "../../components/ui/SubTabs";
 import { motion, AnimatePresence } from "framer-motion";
 
-type TabType = "folder" | "upload";
+type TabType = "folder";
 
 export function Documents() {
   const [activeTab, setActiveTab] = useState<TabType>("folder");
 
   const tabs = [
     { id: "folder", label: "Folders" },
-    { id: "upload", label: "Upload" },
   ];
 
   return (
@@ -41,7 +39,6 @@ export function Documents() {
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             {activeTab === "folder" && <Folder />}
-            {activeTab === "upload" && <Upload />}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -118,49 +118,45 @@ export function BusinessDashboard() {
           {renderModule()}
         </div>
 
-          {/* Bottom Navigation for mobile */}
-          <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/80 dark:bg-dark-card/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl z-50 px-2 py-1.5">
-            <div className="flex justify-between items-center">
-              {bottomNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeModule === item.id;
+        {/* Bottom Navigation for mobile */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-gray-200 dark:border-dark-border z-10">
+          <div className="flex justify-around items-center py-2">
+            {bottomNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeModule === item.id;
 
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveModule(item.id as ModuleType);
-                      navigate(`/${item.id}`);
-                    }}
-                    className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all duration-300 relative group ${isActive
-                      ? "text-blue-600 dark:text-blue-400"
-                      : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                      }`}
-                  >
-                    {isActive && (
-                      <div className="absolute inset-0 bg-blue-50 dark:bg-blue-500/10 rounded-xl -z-10 scale-100 transition-transform duration-300" />
-                    )}
-                    <Icon size={20} className={`transition-transform duration-300 ${isActive ? 'scale-110 -translate-y-0.5' : 'group-active:scale-90'}`} />
-                    <span className={`text-[10px] font-semibold mt-1 transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveModule(item.id as ModuleType);
+                    navigate(`/${item.id}`);
+                  }}
+                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg ${isActive
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400"
+                    }`}
+                >
+                  <Icon size={20} />
+                    <span className="text-xs font-sans font-medium mt-1">{item.label}</span>
 
-              {/* More button to open sidebar */}
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="flex flex-col items-center justify-center py-2 px-3 rounded-xl text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-all duration-300 active:scale-95"
-              >
-                <Menu size={20} />
-                <span className="text-[10px] font-semibold mt-1 opacity-70">More</span>
-              </button>
-            </div>
+                </button>
+              );
+            })}
+
+            {/* More button to open sidebar */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400"
+            >
+              <Menu size={20} />
+              <span className="text-xs mt-1">More</span>
+            </button>
           </div>
+        </div>
 
-          {/* Add padding to content to prevent overlap with bottom nav */}
-          <div className="md:hidden h-24"></div>
+        {/* Add padding to content to prevent overlap with bottom nav */}
+        <div className="md:hidden h-16"></div>
       </main>
     </div>
   );

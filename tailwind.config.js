@@ -26,9 +26,10 @@ export default {
       borderRadius: {
         'container': '0.75rem',
       },
-        fontFamily: {
-          sans: ['"Plus Jakarta Sans"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        },
+      fontFamily: {
+        sans: ['Outfit', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
+      },
     },
   },
   plugins: [],

@@ -57,14 +57,15 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
             <img src="/logo.svg" alt="Runi Logo" className="w-5 h-5 invert brightness-0" />
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">Runi</h1>
+            <h1 className="text-lg font-display font-bold tracking-tight text-gray-900 dark:text-white">Runi</h1>
+
         </div>
       </div>
 
       <nav className="flex-1 px-3 pb-2 overflow-y-auto custom-scrollbar">
         {menuGroups.map((group, groupIdx) => (
           <div key={group.label} className={groupIdx > 0 ? "mt-4" : ""}>
-            <h3 className="px-3 text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500 mb-1.5">
+            <h3 className="px-3 text-[10px] font-display font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500 mb-1.5">
               {group.label}
             </h3>
             <div className="space-y-0.5">
@@ -72,47 +73,36 @@ export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
                 const Icon = module.icon;
                 const isActive = activeModule === module.id;
 
-                  return (
-                    <button
-                      key={module.id}
-                      onClick={() => onModuleChange(module.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-blue-600 dark:text-blue-400"
-                          : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                      }`}
-                    >
-                      {isActive && (
-                        <div className="absolute inset-0 bg-blue-50 dark:bg-blue-500/10 rounded-xl -z-10 animate-in fade-in zoom-in duration-300" />
-                      )}
-                      
-                      <div className={`p-1.5 rounded-lg transition-all duration-300 ${
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => onModuleChange(module.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 group relative ${
+                      isActive
+                        ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                        : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-gray-200"
+                    }`}
+                  >
+                    <Icon
+                      size={18}
+                      strokeWidth={isActive ? 2.5 : 2}
+                      className={`transition-all duration-200 ${
                         isActive 
-                          ? "bg-blue-100 dark:bg-blue-500/20 shadow-sm" 
-                          : "bg-transparent group-hover:bg-gray-100 dark:group-hover:bg-white/5"
-                      }`}>
-                        <Icon
-                          size={18}
-                          strokeWidth={isActive ? 2.5 : 2}
-                          className={`transition-all duration-300 ${
-                            isActive 
-                              ? "scale-110 rotate-3" 
-                              : "group-hover:scale-110 group-hover:rotate-3"
-                          }`}
-                        />
-                      </div>
+                          ? "scale-110" 
+                          : "group-hover:scale-110 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                      }`}
+                    />
+                      <span className={`text-sm font-sans font-medium transition-colors ${
 
-                      <span className={`text-sm font-semibold tracking-tight transition-all duration-300 ${
-                        isActive ? "translate-x-0.5" : "group-hover:translate-x-0.5"
-                      }`}>
-                        {module.label}
-                      </span>
-
-                      {isActive && (
-                        <div className="absolute right-2 w-1.5 h-1.5 bg-blue-600 dark:bg-blue-500 rounded-full shadow-lg shadow-blue-500/50" />
-                      )}
-                    </button>
-                  );
+                      isActive ? "opacity-100" : "opacity-90 group-hover:opacity-100"
+                    }`}>
+                      {module.label}
+                    </span>
+                    {isActive && (
+                      <div className="absolute left-0 w-1 h-4 bg-blue-600 dark:bg-blue-500 rounded-r-full" />
+                    )}
+                  </button>
+                );
               })}
             </div>
           </div>

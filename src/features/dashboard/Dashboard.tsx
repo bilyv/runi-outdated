@@ -149,14 +149,15 @@ export function Dashboard() {
         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <BarChartIcon className="w-20 h-20 text-blue-600" />
         </div>
-        <div className="relative z-10">
-          <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white tracking-tight">
-            Welcome back, <span className="text-blue-600">Ntwari Brian</span>! 👋
-          </h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
-            {formattedDate}
-          </p>
-        </div>
+          <div className="relative z-10">
+            <h1 className="text-lg md:text-xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
+              Welcome back, <span className="text-blue-600">Ntwari Brian</span>! 👋
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-sans font-medium">
+              {formattedDate}
+            </p>
+          </div>
+
       </div>
 
       {/* Stats Cards - 2x2 Grid */}
@@ -169,10 +170,11 @@ export function Dashboard() {
       {/* Financial Overview Card */}
       <div className="bg-white dark:bg-dark-card rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-50 dark:border-dark-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Financial Performance</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Tracking revenue vs investment growth</p>
-          </div>
+            <div>
+              <h2 className="text-lg font-display font-bold text-gray-900 dark:text-white">Financial Performance</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-sans font-medium">Tracking revenue vs investment growth</p>
+            </div>
+
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-dark-bg p-1 rounded-xl border border-gray-100 dark:border-dark-border">
             {(['daily', 'weekly', 'monthly'] as ChartPeriod[]).map((period) => (
               <button

@@ -18,7 +18,6 @@ export function AddCategoryModal({ isOpen, onClose, category }: AddCategoryModal
     const createCategory = useMutation(api.productCategories.create);
     const updateCategory = useMutation(api.productCategories.update);
 
-    // Update form when category prop changes
     useEffect(() => {
         if (category) {
             setCategoryName(category.category_name);
@@ -67,56 +66,39 @@ export function AddCategoryModal({ isOpen, onClose, category }: AddCategoryModal
             onClose={handleClose}
             title={category ? "Edit Category" : "Add Category"}
         >
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl overflow-hidden border border-emerald-500/10">
-                <div className="p-8 space-y-6">
-                    <div className="space-y-1">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text font-display">
-                            {category ? "Update Category" : "New Category"}
-                        </h2>
-                        <p className="text-sm text-gray-500">
-                            Organize your products by grouping them into meaningful categories.
-                        </p>
-                    </div>
-                    
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1.5 ml-1">
-                                Category Name
-                            </label>
-                            <Input
-                                value={categoryName}
-                                onChange={(e) => setCategoryName(e.target.value)}
-                                placeholder="e.g. Rice, Spices, Beverages"
-                                disabled={isSubmitting}
-                                className="h-12 border-emerald-500/10 focus:border-emerald-500/30 bg-gray-50 dark:bg-dark-bg/50"
-                            />
-                        </div>
-                        
-                        <div className="flex justify-end gap-3 pt-4 border-t border-emerald-500/10">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={handleClose}
-                                disabled={isSubmitting}
-                                className="px-6 h-12 rounded-xl"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="px-10 h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 font-bold uppercase tracking-wider text-xs transition-all active:scale-95"
-                            >
-                                {isSubmitting
-                                    ? (category ? "Updating..." : "Creating...")
-                                    : (category ? "Update Category" : "Confirm & Create")
-                                }
-                            </Button>
-                        </div>
-                    </form>
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <Input
+                    label="Category Name"
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    placeholder="Enter category name"
+                    disabled={isSubmitting}
+                    required
+                />
+                
+                <div className="flex justify-end gap-3 pt-4">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={handleClose}
+                        disabled={isSubmitting}
+                        className="flex-1"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={isSubmitting}
+                        className="flex-1"
+                    >
+                        {isSubmitting
+                            ? (category ? "Updating..." : "Creating...")
+                            : (category ? "Update" : "Create")
+                        }
+                    </Button>
                 </div>
-            </div>
+            </form>
         </Modal>
     );
 }
-

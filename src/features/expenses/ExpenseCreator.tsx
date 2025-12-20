@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Button } from "../../components/ui/Button";
 import { motion } from "framer-motion";
-import { FileText, DollarSign, Calendar, Tag, CheckCircle, Clock, Link as LinkIcon, AlertCircle, PlusCircle } from "lucide-react";
+import { FileText, DollarSign, Calendar, Tag, CheckCircle, Clock, Upload, AlertCircle, PlusCircle, X } from "lucide-react";
+import { toast } from "sonner";
 
 export function ExpenseCreator() {
   const [title, setTitle] = useState("");
@@ -12,40 +13,76 @@ export function ExpenseCreator() {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [status, setStatus] = useState("pending");
-  const [receiptUrl, setReceiptUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories = useQuery(api.expenseCategories.list);
   const createExpense = useMutation(api.expenses.create);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const createFileRecord = useMutation(api.files.create);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess(false);
+    setIsUploading(true);
 
     try {
+      let finalReceiptUrl = "";
+
+      // 1. Handle File Upload if selected
+      if (selectedFile) {
+        const postUrl = await generateUploadUrl();
+        const uploadResponse = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedFile.type },
+          body: selectedFile,
+        });
+
+        if (!uploadResponse.ok) throw new Error("Failed to upload receipt image");
+
+        const { storageId } = await uploadResponse.json();
+        const { fileUrl } = await createFileRecord({
+          storageId,
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size,
+        });
+
+        finalReceiptUrl = fileUrl;
+      }
+
+      // 2. Create Expense
       await createExpense({
         title,
         categoryId: categoryId as Id<"expensecategory">,
         amount: parseFloat(amount),
         date: new Date(date).getTime(),
         status,
-        receiptUrl: receiptUrl || undefined,
+        receiptUrl: finalReceiptUrl || undefined,
       });
 
       setSuccess(true);
+      toast.success("Expense created successfully!");
+
       // Reset form
       setTitle("");
       setCategoryId("");
       setAmount("");
       setDate(new Date().toISOString().split('T')[0]);
       setStatus("pending");
-      setReceiptUrl("");
-      
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+      toast.error("Failed to create expense");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -59,7 +96,7 @@ export function ExpenseCreator() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-[2.5rem] border border-white/40 dark:border-white/10 p-8 md:p-10 shadow-xl overflow-hidden relative"
@@ -78,9 +115,9 @@ export function ExpenseCreator() {
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-sans">Record a new business expenditure</p>
             </div>
           </div>
-          
+
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center gap-3 text-sm font-medium"
@@ -91,7 +128,7 @@ export function ExpenseCreator() {
           )}
 
           {success && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center gap-3 text-sm font-medium"
@@ -100,7 +137,7 @@ export function ExpenseCreator() {
               Expense created successfully!
             </motion.div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2 col-span-full">
               <label htmlFor="title" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
@@ -117,7 +154,7 @@ export function ExpenseCreator() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="categoryId" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
                 <Tag size={16} className="text-blue-500" />
@@ -138,7 +175,7 @@ export function ExpenseCreator() {
                 ))}
               </select>
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="amount" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
                 <DollarSign size={16} className="text-blue-500" />
@@ -159,7 +196,7 @@ export function ExpenseCreator() {
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="date" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
                 <Calendar size={16} className="text-blue-500" />
@@ -174,7 +211,7 @@ export function ExpenseCreator() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="status" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
                 <CheckCircle size={16} className="text-blue-500" />
@@ -184,11 +221,10 @@ export function ExpenseCreator() {
                 <button
                   type="button"
                   onClick={() => setStatus("pending")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${
-                    status === "pending" 
-                      ? "bg-white dark:bg-white/10 shadow-md text-amber-600" 
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${status === "pending"
+                      ? "bg-white dark:bg-white/10 shadow-md text-amber-600"
                       : "text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <Clock size={16} />
                   Pending
@@ -196,40 +232,89 @@ export function ExpenseCreator() {
                 <button
                   type="button"
                   onClick={() => setStatus("paid")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${
-                    status === "paid" 
-                      ? "bg-white dark:bg-white/10 shadow-md text-emerald-600" 
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${status === "paid"
+                      ? "bg-white dark:bg-white/10 shadow-md text-emerald-600"
                       : "text-gray-500 hover:text-gray-700"
-                  }`}
+                    }`}
                 >
                   <CheckCircle size={16} />
                   Paid
                 </button>
               </div>
             </div>
-            
+
             <div className="space-y-2 col-span-full">
-              <label htmlFor="receiptUrl" className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
-                <LinkIcon size={16} className="text-blue-500" />
-                Receipt URL (Optional)
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 ml-1 font-display">
+                <Upload size={16} className="text-blue-500" />
+                Receipt Image (Optional)
               </label>
-              <input
-                type="url"
-                id="receiptUrl"
-                value={receiptUrl}
-                onChange={(e) => setReceiptUrl(e.target.value)}
-                className="w-full px-5 py-4 bg-white/50 dark:bg-black/20 border border-gray-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-sans text-gray-900 dark:text-white placeholder:text-gray-400 shadow-sm"
-                placeholder="https://example.com/receipt.pdf"
-              />
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className={`
+                  relative border-2 border-dashed rounded-2xl p-6 transition-all duration-300 cursor-pointer text-center
+                  ${selectedFile
+                    ? 'border-emerald-500/50 bg-emerald-500/5'
+                    : 'border-gray-200 dark:border-white/10 hover:border-blue-500/50 bg-white/50 dark:bg-black/20'}
+                `}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                  accept="image/*"
+                />
+
+                {selectedFile ? (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 text-left">
+                      <div className="p-2 bg-emerald-500/20 rounded-xl text-emerald-600">
+                        <CheckCircle size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[200px]">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {(selectedFile.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="p-2 hover:bg-red-500/10 rounded-xl text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">Click to upload receipt</p>
+                    <p className="text-xs text-gray-500">PNG, JPG or JPEG (Max 10MB)</p>
+                  </div>
+                )}
+              </div>
             </div>
-            
+
             <div className="flex justify-end pt-4 col-span-full">
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full md:w-auto px-10 py-4 rounded-2xl font-display font-bold text-base shadow-xl shadow-blue-500/20 group transition-all hover:scale-105 active:scale-95"
+                disabled={isUploading}
+                className="w-full md:w-auto px-10 py-4 rounded-2xl font-display font-bold text-base shadow-xl shadow-blue-500/20 group transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100"
               >
-                Create Expense Entry
+                {isUploading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating...
+                  </div>
+                ) : "Create Expense Entry"}
               </Button>
             </div>
           </form>

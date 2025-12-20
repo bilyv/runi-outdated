@@ -71,7 +71,7 @@ export const update = mutation({
       const existingFolders = await ctx.db
         .query("folders")
         .withIndex("by_user", (q) => q.eq("user_id", userId))
-        .filter((q) => 
+        .filter((q) =>
           q.and(
             q.eq(q.field("folder_name"), updates.folder_name),
             q.neq(q.field("_id"), id)
@@ -114,5 +114,33 @@ export const deleteFolder = mutation({
     }
 
     await ctx.db.delete(args.id);
+  },
+});
+
+// Get or create a folder by name (useful for system folders)
+export const getOrCreateByName = mutation({
+  args: { folder_name: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const existingFolder = await ctx.db
+      .query("folders")
+      .withIndex("by_user", (q) => q.eq("user_id", userId))
+      .filter((q) => q.eq(q.field("folder_name"), args.folder_name))
+      .unique();
+
+    if (existingFolder) {
+      return existingFolder._id;
+    }
+
+    return await ctx.db.insert("folders", {
+      folder_id: `folder_${Date.now()}`,
+      user_id: userId,
+      folder_name: args.folder_name,
+      file_count: 0,
+      total_size: 0,
+      updated_at: Date.now(),
+    });
   },
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "../../components/ui/Button";
@@ -34,6 +34,13 @@ export function Folder() {
   const createFolder = useMutation(api.folders.create);
   const updateFolder = useMutation(api.folders.update);
   const deleteFolder = useMutation(api.folders.deleteFolder);
+  const getOrCreateFolder = useMutation(api.folders.getOrCreateByName);
+
+  useEffect(() => {
+    // Initialize default folders
+    getOrCreateFolder({ folder_name: "Deposited" });
+    getOrCreateFolder({ folder_name: "expense reciept" });
+  }, [getOrCreateFolder]);
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {

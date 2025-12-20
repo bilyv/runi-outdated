@@ -3,22 +3,22 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Modal } from "../../components/ui/Modal";
 import { Table, TableRow, TableCell } from "../../components/ui/Table";
-import { 
-  Plus, 
-  Trash2, 
-  Eye, 
-  Search, 
-  Calendar, 
-  DollarSign, 
-  Tag, 
-  User, 
-  Hash, 
-  CheckCircle, 
-  Clock, 
-  XCircle, 
-  AlertCircle, 
-  FileText, 
-  Loader2 
+import {
+  Plus,
+  Trash2,
+  Eye,
+  Search,
+  Calendar,
+  DollarSign,
+  Tag,
+  User,
+  Hash,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  FileText,
+  Loader2
 } from "lucide-react";
 
 export function Deposited() {
@@ -28,18 +28,19 @@ export function Deposited() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const [amount, setAmount] = useState("");
   const [depositType, setDepositType] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  
+
   const createDeposit = useMutation(api.deposit.create);
   const deleteDeposit = useMutation(api.deposit.remove);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createFileRecord = useMutation(api.files.create);
-  
+  const getOrCreateFolder = useMutation(api.folders.getOrCreateByName);
+
   const handleSaveDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -48,34 +49,38 @@ export function Deposited() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       let receiptImageUrl = "";
       if (receiptFile) {
         const uploadUrl = await generateUploadUrl();
-        
+
         const response = await fetch(uploadUrl, {
           method: "POST",
           body: receiptFile,
           headers: { "Content-Type": receiptFile.type },
         });
-        
+
         if (!response.ok) throw new Error("Failed to upload file");
-        
+
         const { storageId } = await response.json();
-        
+
+        // Ensure 'Deposited' folder exists and get ID
+        const folderId = await getOrCreateFolder({ folder_name: "Deposited" });
+
         const fileRecord = await createFileRecord({
           storageId,
           fileName: receiptFile.name,
           fileType: receiptFile.type,
           fileSize: receiptFile.size,
+          folderId: folderId,
         });
 
         receiptImageUrl = fileRecord.fileUrl;
       }
-      
+
       const userIdStr = user._id.toString();
-      
+
       await createDeposit({
         deposit_id: `DEP-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         user_id: userIdStr,
@@ -90,7 +95,7 @@ export function Deposited() {
         updated_at: Date.now(),
         updated_by: userIdStr,
       });
-      
+
       setAmount("");
       setDepositType("");
       setAccountName("");
@@ -107,7 +112,7 @@ export function Deposited() {
 
   const handleDelete = async (depositId: string) => {
     if (!window.confirm("Are you sure you want to delete this deposit record?")) return;
-    
+
     try {
       await deleteDeposit({ deposit_id: depositId });
     } catch (error) {
@@ -122,7 +127,7 @@ export function Deposited() {
     }
   }, [deposits]);
 
-  const filteredDeposits = deposits?.filter(d => 
+  const filteredDeposits = deposits?.filter(d =>
     d.account_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     d.deposit_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
     d.deposit_type.toLowerCase().includes(searchQuery.toLowerCase())
@@ -146,11 +151,11 @@ export function Deposited() {
             <h2 className="text-2xl font-bold font-display tracking-tight text-gray-900 dark:text-white">Deposited Transactions</h2>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 font-sans">Track and manage all bank and mobile money deposits</p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input 
+              <input
                 type="text"
                 placeholder="Search deposits..."
                 value={searchQuery}
@@ -169,7 +174,7 @@ export function Deposited() {
         </div>
       </div>
 
-      <Table 
+      <Table
         headers={["Date & Time", "Amount", "Type", "Account Info", "Approval Status", "Receipt", "Actions"]}
         count={filteredDeposits?.length}
       >
@@ -200,24 +205,23 @@ export function Deposited() {
                 </div>
               </TableCell>
               <TableCell>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  deposit.approval === "approved" 
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${deposit.approval === "approved"
                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                     : deposit.approval === "rejected"
-                    ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                    : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                }`}>
-                  {deposit.approval === "approved" ? <CheckCircle className="w-3 h-3" /> : 
-                   deposit.approval === "rejected" ? <XCircle className="w-3 h-3" /> : 
-                   <Clock className="w-3 h-3" />}
+                      ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+                  }`}>
+                  {deposit.approval === "approved" ? <CheckCircle className="w-3 h-3" /> :
+                    deposit.approval === "rejected" ? <XCircle className="w-3 h-3" /> :
+                      <Clock className="w-3 h-3" />}
                   {deposit.approval}
                 </span>
               </TableCell>
               <TableCell>
                 {deposit.deposit_image_url ? (
-                  <a 
-                    href={deposit.deposit_image_url} 
-                    target="_blank" 
+                  <a
+                    href={deposit.deposit_image_url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline font-bold text-xs"
                   >
@@ -232,7 +236,7 @@ export function Deposited() {
                 )}
               </TableCell>
               <TableCell>
-                <button 
+                <button
                   onClick={() => handleDelete(deposit.deposit_id)}
                   className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10"
                 >
@@ -335,11 +339,10 @@ export function Deposited() {
             <label className="text-xs font-bold font-display text-gray-400 uppercase tracking-widest ml-1">
               Proof of Payment
             </label>
-            <div className={`mt-1 flex flex-col items-center justify-center px-6 py-6 border-2 border-dashed rounded-[2rem] transition-all ${
-              receiptFile 
-                ? "border-blue-400 bg-blue-500/5" 
+            <div className={`mt-1 flex flex-col items-center justify-center px-6 py-6 border-2 border-dashed rounded-[2rem] transition-all ${receiptFile
+                ? "border-blue-400 bg-blue-500/5"
                 : "border-gray-200 dark:border-white/10 hover:border-blue-400 bg-white/30 dark:bg-black/10"
-            }`}>
+              }`}>
               {receiptFile ? (
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600">
@@ -349,8 +352,8 @@ export function Deposited() {
                     <p className="text-sm font-bold text-gray-900 dark:text-white truncate font-display">{receiptFile.name}</p>
                     <p className="text-xs text-gray-500 font-sans">{(receiptFile.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setReceiptFile(null)}
                     className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-white dark:bg-black/20 rounded-xl"
                   >
@@ -361,10 +364,10 @@ export function Deposited() {
                 <label className="cursor-pointer text-center group w-full">
                   <Plus className="mx-auto h-10 w-10 text-gray-300 group-hover:text-blue-500 transition-colors mb-2" />
                   <span className="text-sm font-bold text-blue-600 dark:text-blue-400 font-display">Click to upload receipt</span>
-                  <input 
-                    type="file" 
-                    className="sr-only" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept="image/*"
                     onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
                     disabled={isSubmitting}
                   />

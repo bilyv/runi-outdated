@@ -23,6 +23,7 @@ export function ExpenseCreator() {
   const createExpense = useMutation(api.expenses.create);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const createFileRecord = useMutation(api.files.create);
+  const getOrCreateFolder = useMutation(api.folders.getOrCreateByName);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,11 +46,16 @@ export function ExpenseCreator() {
         if (!uploadResponse.ok) throw new Error("Failed to upload receipt image");
 
         const { storageId } = await uploadResponse.json();
+
+        // 1.1 Ensure 'expense reciept' folder exists and get ID
+        const folderId = await getOrCreateFolder({ folder_name: "expense reciept" });
+
         const { fileUrl } = await createFileRecord({
           storageId,
           fileName: selectedFile.name,
           fileType: selectedFile.type,
           fileSize: selectedFile.size,
+          folderId: folderId,
         });
 
         finalReceiptUrl = fileUrl;
@@ -222,8 +228,8 @@ export function ExpenseCreator() {
                   type="button"
                   onClick={() => setStatus("pending")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${status === "pending"
-                      ? "bg-white dark:bg-white/10 shadow-md text-amber-600"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white dark:bg-white/10 shadow-md text-amber-600"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <Clock size={16} />
@@ -233,8 +239,8 @@ export function ExpenseCreator() {
                   type="button"
                   onClick={() => setStatus("paid")}
                   className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl transition-all font-display font-bold text-sm ${status === "paid"
-                      ? "bg-white dark:bg-white/10 shadow-md text-emerald-600"
-                      : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white dark:bg-white/10 shadow-md text-emerald-600"
+                    : "text-gray-500 hover:text-gray-700"
                     }`}
                 >
                   <CheckCircle size={16} />

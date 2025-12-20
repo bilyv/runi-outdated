@@ -58,7 +58,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return (
         <div className="h-16 px-4 md:px-6 flex items-center justify-between bg-white/40 dark:bg-dark-card/40 backdrop-blur-md border-b border-gray-200 dark:border-dark-border sticky top-0 z-10">
             <div className="flex items-center gap-4">
-                <button 
+                <button
                     onClick={onMenuClick}
                     className="md:hidden p-1.5 text-gray-500 dark:text-dark-text hover:bg-gray-100 dark:hover:bg-dark-card rounded-full transition-colors"
                 >
@@ -76,7 +76,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                 </button>
 
                 <div className="relative" ref={dropdownRef}>
-                    <button 
+                    <button
                         onClick={() => setDropdownOpen(!dropdownOpen)}
                         className="flex items-center gap-2 p-1 hover:bg-gray-100 dark:hover:bg-dark-card rounded-full transition-all"
                     >

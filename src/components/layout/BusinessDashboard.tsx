@@ -138,7 +138,7 @@ export function BusinessDashboard() {
                     }`}
                 >
                   <Icon size={20} />
-                    <span className="text-xs font-sans font-medium mt-1">{item.label}</span>
+                  <span className="text-xs font-sans font-medium mt-1">{item.label}</span>
 
                 </button>
               );

@@ -136,10 +136,10 @@ export function Dashboard() {
     return null;
   };
 
-  const formattedDate = new Intl.DateTimeFormat('en-US', { 
-    weekday: 'long', 
-    month: 'short', 
-    day: 'numeric' 
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
   }).format(new Date());
 
   return (
@@ -149,14 +149,14 @@ export function Dashboard() {
         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
           <BarChartIcon className="w-20 h-20 text-blue-600" />
         </div>
-          <div className="relative z-10">
-            <h1 className="text-lg md:text-xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
-              Welcome back, <span className="text-blue-600">Ntwari Brian</span>! 👋
-            </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-sans font-medium">
-              {formattedDate}
-            </p>
-          </div>
+        <div className="relative z-10">
+          <h1 className="text-lg md:text-xl font-display font-bold text-gray-900 dark:text-white tracking-tight">
+            Welcome back, <span className="text-blue-600">Ntwari Brian</span>! 👋
+          </h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 font-sans font-medium">
+            {formattedDate}
+          </p>
+        </div>
 
       </div>
 
@@ -170,21 +170,20 @@ export function Dashboard() {
       {/* Financial Overview Card */}
       <div className="bg-white dark:bg-dark-card rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-50 dark:border-dark-border/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-lg font-display font-bold text-gray-900 dark:text-white">Financial Performance</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-sans font-medium">Tracking revenue vs investment growth</p>
-            </div>
+          <div>
+            <h2 className="text-lg font-display font-bold text-gray-900 dark:text-white">Financial Performance</h2>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-sans font-medium">Tracking revenue vs investment growth</p>
+          </div>
 
           <div className="flex items-center gap-2 bg-gray-50 dark:bg-dark-bg p-1 rounded-xl border border-gray-100 dark:border-dark-border">
             {(['daily', 'weekly', 'monthly'] as ChartPeriod[]).map((period) => (
               <button
                 key={period}
                 onClick={() => setChartPeriod(period)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  chartPeriod === period
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === period
                     ? 'bg-white dark:bg-dark-card text-blue-600 shadow-sm ring-1 ring-black/5'
                     : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-                }`}
+                  }`}
               >
                 {period === 'daily' ? 'Week' : period === 'weekly' ? 'Month' : '6 Months'}
               </button>
@@ -210,16 +209,16 @@ export function Dashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.4} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
                       tick={{ fontSize: 11, fontWeight: 600, fill: '#9CA3AF' }}
                       dy={10}
                     />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
                       tick={{ fontSize: 11, fontWeight: 600, fill: '#9CA3AF' }}
                       tickFormatter={(value) => `$${value}`}
                     />
@@ -268,7 +267,7 @@ export function Dashboard() {
                     {netPositive >= 0 ? 'Surplus' : 'Deficit'}
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-dark-bg border border-gray-100 dark:border-dark-border">
                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Value</p>
@@ -301,7 +300,7 @@ export function Dashboard() {
                   </span>
                 </div>
                 <div className="h-2 w-full bg-gray-100 dark:bg-dark-bg rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-blue-600 rounded-full transition-all duration-1000 ease-out"
                     style={{ width: `${(stats.financialOverview.profit / stats.financialOverview.revenue) * 100}%` }}
                   ></div>

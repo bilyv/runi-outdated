@@ -137,6 +137,29 @@ export const remove = mutation({
     },
 });
 
+export const toggleActiveStatus = mutation({
+    args: { id: v.id("staff") },
+    handler: async (ctx, args) => {
+        const staff = await ctx.db.get(args.id);
+        if (!staff) throw new ConvexError("Staff not found");
+
+        const newStatus = !(staff.is_active ?? true); // Default to true if undefined
+
+        const updates: any = {
+            is_active: newStatus,
+        };
+
+        // If deactivating, clear session to force logout
+        if (!newStatus) {
+            updates.session_token = undefined;
+            updates.session_expiry = undefined;
+        }
+
+        await ctx.db.patch(args.id, updates);
+        return newStatus;
+    },
+});
+
 export const login = mutation({
     args: {
         email: v.string(),
@@ -153,6 +176,11 @@ export const login = mutation({
 
         if (!staff) {
             throw new ConvexError("Invalid email or password");
+        }
+
+        // Check active status
+        if (staff.is_active === false) {
+            throw new ConvexError("Account deactivated. Contact admin to restore access.");
         }
 
         // Verify password

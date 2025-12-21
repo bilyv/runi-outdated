@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Search, Phone, User, Trash2, Shield, Calendar, Mail, FileText, Fingerprint, Plus } from "lucide-react";
+import { Search, Phone, User, Trash2, Shield, Calendar, Mail, FileText, Fingerprint, Plus, Power, Ban } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../../components/ui/Button";
 import { toast } from "sonner";
@@ -10,6 +10,8 @@ import { StaffCreator } from "./StaffCreator";
 export function AllWorkers() {
   const staff = useQuery(api.staff.list);
   const deleteStaff = useMutation(api.staff.remove);
+  const toggleStatus = useMutation(api.staff.toggleActiveStatus);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredStaff, setFilteredStaff] = useState<any[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
@@ -32,6 +34,18 @@ export function AllWorkers() {
         toast.success("Staff member removed successfully");
       } catch (error) {
         toast.error("Failed to remove staff member");
+      }
+    }
+  };
+
+  const handleToggleActive = async (id: any, currentStatus: boolean) => {
+    const action = currentStatus ? "deactivate" : "activate";
+    if (confirm(`Are you sure you want to ${action} this staff member?`)) {
+      try {
+        await toggleStatus({ id });
+        toast.success(`Staff member ${action}d successfully`);
+      } catch (error) {
+        toast.error(`Failed to ${action} staff member`);
       }
     }
   };
@@ -113,7 +127,10 @@ export function AllWorkers() {
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   {/* Avatar / Profile */}
                   <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold font-display text-2xl shadow-lg shadow-blue-500/20">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold font-display text-2xl shadow-lg transition-colors ${(member.is_active ?? true)
+                        ? "bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/20"
+                        : "bg-gray-400 dark:bg-gray-600 grayscale"
+                      }`}>
                       {member.staff_full_name.charAt(0).toUpperCase()}
                     </div>
                   </div>
@@ -121,7 +138,9 @@ export function AllWorkers() {
                   {/* Details Bar */}
                   <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-4 gap-4 items-center w-full">
                     <div className="col-span-1">
-                      <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate font-display mb-1">{member.staff_full_name}</h4>
+                      <h4 className={`text-lg font-bold truncate font-display mb-1 transition-colors ${(member.is_active ?? true) ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400 line-through"}`}>
+                        {member.staff_full_name}
+                      </h4>
                       <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 font-medium">
                         <Fingerprint className="w-3 h-3 mr-1.5 text-blue-500/70" />
                         ID: {member.staff_id}
@@ -155,12 +174,28 @@ export function AllWorkers() {
                     </div>
 
                     <div className="col-span-1 flex justify-end gap-2">
-                      <div className="flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-xl mr-2">
-                        <Shield className="w-3 h-3 mr-2 text-blue-600 dark:text-blue-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 font-display">
-                          Staff
+                      <div className={`flex items-center px-3 py-1.5 rounded-xl mr-2 transition-colors ${(member.is_active ?? true)
+                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                          : "bg-gray-100 dark:bg-white/5 text-gray-500"
+                        }`}>
+                        <Shield className="w-3 h-3 mr-2" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider font-display">
+                          {(member.is_active ?? true) ? "Active" : "Inactive"}
                         </span>
                       </div>
+
+                      {/* Toggle Active Status Button */}
+                      <button
+                        onClick={() => handleToggleActive(member._id, member.is_active ?? true)}
+                        className={`p-3 rounded-2xl mr-2 md:opacity-0 md:group-hover:opacity-100 transition-all hover:scale-110 active:scale-95 ${(member.is_active ?? true)
+                            ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20"
+                            : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                          }`}
+                        title={(member.is_active ?? true) ? "Deactivate Account" : "Activate Account"}
+                      >
+                        {(member.is_active ?? true) ? <Power size={20} /> : <Ban size={20} className="rotate-45" />}
+                      </button>
+
                       <button
                         onClick={() => handleDelete(member._id)}
                         className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 md:opacity-0 md:group-hover:opacity-100 transition-all hover:scale-110 active:scale-95"

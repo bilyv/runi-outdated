@@ -293,6 +293,7 @@ const applicationTables = {
     password: v.string(),
     session_token: v.optional(v.string()),
     session_expiry: v.optional(v.number()),
+    is_active: v.optional(v.boolean()), // Defaults to true if undefined
     failed_login_attempts: v.optional(v.number()),
     updated_at: v.number(),
   })

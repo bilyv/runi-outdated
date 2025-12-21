@@ -1,17 +1,15 @@
 import { useState } from "react";
-import { AllTransactions } from "./AllTransactions";
 import { Deposited } from "./Deposited";
 import { Debtors } from "./Debtors";
 import { SubTabs } from "../../components/ui/SubTabs";
 import { motion, AnimatePresence } from "framer-motion";
 
-type TabType = "all" | "deposited" | "debtors";
+type TabType = "deposited" | "debtors";
 
 export function CashTracking() {
-  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [activeTab, setActiveTab] = useState<TabType>("deposited");
 
   const tabs = [
-    { id: "all", label: "All Transactions" },
     { id: "deposited", label: "Deposited" },
     { id: "debtors", label: "Unpaid/Debtors" },
   ];
@@ -42,7 +40,6 @@ export function CashTracking() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            {activeTab === "all" && <AllTransactions />}
             {activeTab === "deposited" && <Deposited />}
             {activeTab === "debtors" && <Debtors />}
           </motion.div>

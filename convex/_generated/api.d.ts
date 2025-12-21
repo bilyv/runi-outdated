@@ -22,7 +22,6 @@ import type * as router from "../router.js";
 import type * as sales from "../sales.js";
 import type * as settings from "../settings.js";
 import type * as staff from "../staff.js";
-import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -46,7 +45,6 @@ declare const fullApi: ApiFromModules<{
   sales: typeof sales;
   settings: typeof settings;
   staff: typeof staff;
-  transactions: typeof transactions;
   users: typeof users;
 }>;
 

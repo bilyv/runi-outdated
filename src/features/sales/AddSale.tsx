@@ -25,7 +25,6 @@ export function AddSale() {
   // Fetch products for dropdown
   const products = useQuery(api.products.list, {}) || [];
   const createSale = useMutation(api.sales.create);
-  const createTransaction = useMutation(api.transactions.create);
 
   // Handle form input changes
   const handleChange = (field: string, value: string) => {
@@ -200,21 +199,7 @@ export function AddSale() {
         updated_at: Date.now()
       });
 
-      // Create the transaction
-      await createTransaction({
-        transaction_id: `txn_${Date.now()}`,
-        sales_id: saleId,
-        user_id: userId,
-        product_name: selectedProduct.name,
-        client_name: formData.client_name || 'N/A',
-        boxes_quantity: boxesQuantity,
-        kg_quantity: kgQuantity,
-        total_amount: totalAmount,
-        payment_status: apiPaymentStatus,
-        payment_method: formData.payment_method,
-        updated_by: userId,
-        updated_at: Date.now()
-      });
+
 
       // Reset form
       setFormData({

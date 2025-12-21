@@ -11,9 +11,11 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { Routes, Route } from "react-router-dom";
 
 import { StaffLoginForm } from "./features/auth/StaffLoginForm";
+import { StaffDashboard } from "./features/staff/StaffDashboard";
 
 export default function App() {
   const [authView, setAuthView] = useState<'signIn' | 'signUp' | 'forgotPassword' | 'staffLogin'>('signIn');
+  const [staffUser, setStaffUser] = useState<any | null>(null);
 
   const AuthForm = () => {
     if (authView === 'signUp') {
@@ -23,7 +25,10 @@ export default function App() {
       return <ForgotPasswordForm onSwitchToSignIn={() => setAuthView('signIn')} />;
     }
     if (authView === 'staffLogin') {
-      return <StaffLoginForm onSwitchToBusinessLogin={() => setAuthView('signIn')} />;
+      return <StaffLoginForm
+        onSwitchToBusinessLogin={() => setAuthView('signIn')}
+        onLogin={(user) => setStaffUser(user)}
+      />;
     }
     return <SignInForm
       onSwitchToSignUp={() => setAuthView('signUp')}
@@ -43,20 +48,30 @@ export default function App() {
         </Authenticated>
 
         <Unauthenticated>
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4 mx-auto">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+          {staffUser ? (
+            <StaffDashboard
+              staffUser={staffUser}
+              onLogout={() => {
+                setStaffUser(null);
+                setAuthView('staffLogin');
+              }}
+            />
+          ) : (
+            <div className="min-h-screen flex items-center justify-center p-4">
+              <div className="w-full max-w-md">
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4 mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Runi</h1>
+                  <p className="text-gray-600 dark:text-gray-400">Manage your business operations efficiently</p>
                 </div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Runi</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage your business operations efficiently</p>
+                <AuthForm />
               </div>
-              <AuthForm />
             </div>
-          </div>
+          )}
         </Unauthenticated>
 
         <Toaster position="top-right" richColors />

@@ -121,7 +121,7 @@ export function StaffCreator({ isOpen, onClose }: StaffCreatorProps) {
             // 4. Create Staff Record
             await createStaff({
                 staff_full_name: formData.fullName,
-                email_address: formData.email,
+                email_address: formData.email.trim().toLowerCase(),
                 phone_number: formData.phone,
                 id_card_front_url: storageIdFront, // Storing storageId is better for Convex
                 id_card_back_url: storageIdBack,

@@ -1,25 +1,41 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { User, Lock, Mail, ChevronLeft } from "lucide-react";
+import { User, Lock, Mail, ChevronLeft, Loader2 } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
 
 interface StaffLoginFormProps {
     onSwitchToBusinessLogin: () => void;
+    onLogin: (user: any) => void;
 }
 
-export function StaffLoginForm({ onSwitchToBusinessLogin }: StaffLoginFormProps) {
+export function StaffLoginForm({ onSwitchToBusinessLogin, onLogin }: StaffLoginFormProps) {
     const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const staffLogin = useMutation(api.staff.login);
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setLoading(true);
 
-        // UI Only implementation
-        setTimeout(() => {
-            toast.info("Staff login is currently UI-only. Backend integration coming soon!");
+        try {
+            const user = await staffLogin({
+                email,
+                password,
+            });
+
+            toast.success("Login successful");
+            onLogin(user);
+        } catch (error: any) {
+            toast.error(error.message || "Failed to login. Please check your credentials.");
+            console.error(error);
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -50,6 +66,8 @@ export function StaffLoginForm({ onSwitchToBusinessLogin }: StaffLoginFormProps)
                     icon={<Mail size={18} />}
                     required
                     disabled={loading}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                 />
 
                 <div className="space-y-1">
@@ -60,6 +78,8 @@ export function StaffLoginForm({ onSwitchToBusinessLogin }: StaffLoginFormProps)
                         icon={<Lock size={18} />}
                         required
                         disabled={loading}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <div className="flex justify-end">
                         <button
@@ -76,7 +96,14 @@ export function StaffLoginForm({ onSwitchToBusinessLogin }: StaffLoginFormProps)
                     disabled={loading}
                     className="w-full h-14 rounded-2xl text-lg font-bold shadow-xl shadow-blue-500/20 active:scale-95 transition-all"
                 >
-                    {loading ? "Authenticating..." : "Access Terminal"}
+                    {loading ? (
+                        <div className="flex items-center gap-2">
+                            <Loader2 className="animate-spin w-5 h-5" />
+                            <span>Authenticating...</span>
+                        </div>
+                    ) : (
+                        "Access Terminal"
+                    )}
                 </Button>
             </form>
 

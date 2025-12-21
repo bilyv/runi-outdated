@@ -1,5 +1,5 @@
 import { query, mutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const list = query({
@@ -134,5 +134,44 @@ export const remove = mutation({
         }
 
         await ctx.db.delete(args.id);
+    },
+});
+
+export const login = mutation({
+    args: {
+        email: v.string(),
+        password: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const normalizedEmail = args.email.trim().toLowerCase();
+
+        // Find staff by email
+        const staff = await ctx.db
+            .query("staff")
+            .withIndex("by_email", (q) => q.eq("email_address", normalizedEmail))
+            .unique();
+
+        if (!staff) {
+            throw new ConvexError("Invalid email or password");
+        }
+
+        // Verify password
+        if (staff.password !== args.password) {
+            // Update failed attempts
+            await ctx.db.patch(staff._id, {
+                failed_login_attempts: (staff.failed_login_attempts ?? 0) + 1,
+            });
+            throw new ConvexError("Invalid email or password");
+        }
+
+        // Reset failed attempts on successful login
+        await ctx.db.patch(staff._id, {
+            failed_login_attempts: 0,
+            updated_at: Date.now(),
+        });
+
+        // Safe return (exclude password)
+        const { password, ...staffData } = staff;
+        return staffData;
     },
 });

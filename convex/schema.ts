@@ -292,7 +292,7 @@ const applicationTables = {
     id_card_back_url: v.string(),
     password: v.string(),
     session: v.optional(v.string()),
-    failed_login_attempts: v.number(),
+    failed_login_attempts: v.optional(v.number()),
     updated_at: v.number(),
   })
     .index("by_user", ["user_id"])

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { LogOut, LayoutDashboard, ShoppingCart, User, Bell, Settings as SettingsIcon, Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { motion, AnimatePresence } from "framer-motion";
-import { StaffSettings } from "./StaffSettings";
+import { StaffSettings } from "../settings/StaffSettings";
 
 interface StaffDashboardProps {
     staffUser: any;
@@ -53,8 +53,8 @@ export function StaffDashboard({ staffUser, onLogout }: StaffDashboardProps) {
                                     key={item.id}
                                     onClick={() => setActiveTab(item.id)}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === item.id
-                                            ? "bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm"
-                                            : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                                        ? "bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm"
+                                        : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
                                         }`}
                                 >
                                     <item.icon size={18} />
@@ -125,8 +125,8 @@ export function StaffDashboard({ staffUser, onLogout }: StaffDashboardProps) {
                                             setIsSidebarOpen(false);
                                         }}
                                         className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-base font-bold transition-all ${activeTab === item.id
-                                                ? "bg-blue-600 text-white shadow-xl shadow-blue-500/30"
-                                                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
+                                            ? "bg-blue-600 text-white shadow-xl shadow-blue-500/30"
+                                            : "text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
                                             }`}
                                     >
                                         <item.icon size={22} />

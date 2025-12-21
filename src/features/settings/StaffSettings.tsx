@@ -1,5 +1,5 @@
 import { StaffProfile } from "./StaffProfile";
-import { ThemeSettings } from "../settings/ThemeSettings";
+import { ThemeSettings } from "./ThemeSettings";
 import { motion } from "framer-motion";
 import { User, Palette, Settings as SettingsIcon, ShieldCheck } from "lucide-react";
 

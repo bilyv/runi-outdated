@@ -12,6 +12,7 @@ import { Routes, Route } from "react-router-dom";
 
 import { StaffLoginForm } from "./features/auth/StaffLoginForm";
 import { StaffDashboard } from "./features/staff/StaffDashboard";
+import { StaffDashboardSkeleton } from "./features/staff/StaffDashboardSkeleton";
 
 export default function App() {
   const [authView, setAuthView] = useState<'signIn' | 'signUp' | 'forgotPassword' | 'staffLogin'>('signIn');
@@ -20,6 +21,7 @@ export default function App() {
 
   // Validate session if token exists
   const validatedStaff = useQuery(api.staff.validateSession, staffToken ? { token: staffToken } : "skip");
+  const isStaffLoading = staffToken !== null && validatedStaff === undefined;
 
   useEffect(() => {
     if (validatedStaff) {
@@ -54,43 +56,49 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-bg dark:to-dark-card dark:text-dark-text">
-        <Authenticated>
-          <Routes>
-            <Route path="/" element={<BusinessDashboard />} />
-            <Route path="/:module" element={<BusinessDashboard />} />
-          </Routes>
-        </Authenticated>
+      {isStaffLoading ? (
+        <StaffDashboardSkeleton />
+      ) : (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-dark-bg dark:to-dark-card dark:text-dark-text">
+          <Authenticated>
+            <Routes>
+              <Route path="/" element={<BusinessDashboard />} />
+              <Route path="/:module" element={<BusinessDashboard />} />
+            </Routes>
+          </Authenticated>
 
-        <Unauthenticated>
-          {staffUser ? (
-            <StaffDashboard
-              staffUser={staffUser}
-              onLogout={() => {
-                setStaffUser(null);
-                setAuthView('staffLogin');
-              }}
-            />
-          ) : (
-            <div className="min-h-screen flex items-center justify-center p-4">
-              <div className="w-full max-w-md">
-                <div className="text-center mb-10">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4 mx-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+          <Unauthenticated>
+            {staffUser ? (
+              <StaffDashboard
+                staffUser={staffUser}
+                onLogout={() => {
+                  localStorage.removeItem('staff_session_token');
+                  setStaffToken(null);
+                  setStaffUser(null);
+                  setAuthView('staffLogin');
+                }}
+              />
+            ) : (
+              <div className="min-h-screen flex items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                  <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-full mb-4 mx-auto">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Runi</h1>
+                    <p className="text-gray-600 dark:text-gray-400">Manage your business operations efficiently</p>
                   </div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Runi</h1>
-                  <p className="text-gray-600 dark:text-gray-400">Manage your business operations efficiently</p>
+                  <AuthForm />
                 </div>
-                <AuthForm />
               </div>
-            </div>
-          )}
-        </Unauthenticated>
+            )}
+          </Unauthenticated>
 
-        <Toaster position="top-right" richColors />
-      </div>
+          <Toaster position="top-right" richColors />
+        </div>
+      )}
     </ThemeProvider>
   );
 }

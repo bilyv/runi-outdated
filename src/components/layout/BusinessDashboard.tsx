@@ -23,7 +23,7 @@ export type ModuleType =
   | "transactions";
 
 import { Navbar } from "./Navbar";
-import { BarChart3, Package, Menu, Receipt, FileText } from "lucide-react";
+import { BarChart3, Package, Menu, Receipt, FileText, ShoppingCart } from "lucide-react";
 
 export function BusinessDashboard() {
   const [activeModule, setActiveModule] = useState<ModuleType>("dashboard");
@@ -87,8 +87,8 @@ export function BusinessDashboard() {
   const bottomNavItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3 },
     { id: "products", label: "Products", icon: Package },
+    { id: "sales", label: "Sales", icon: ShoppingCart },
     { id: "expenses", label: "Expenses", icon: Receipt },
-    { id: "documents", label: "Documents", icon: FileText },
   ];
 
   return (
@@ -150,7 +150,7 @@ export function BusinessDashboard() {
               className="flex flex-col items-center justify-center py-2 px-3 rounded-lg text-gray-500 dark:text-gray-400"
             >
               <Menu size={20} />
-              <span className="text-xs mt-1">More</span>
+              <span className="text-xs mt-1">Menu</span>
             </button>
           </div>
         </div>

@@ -7,49 +7,62 @@ import {
   UserCheck,
   Settings as SettingsIcon,
   Banknote,
-  LayoutGrid
+  LayoutGrid,
+  LucideIcon
 } from "lucide-react";
 import { ModuleType } from "./BusinessDashboard";
 import { SignOutButton } from "../../features/auth/SignOutButton";
 
-interface SidebarProps {
-  activeModule: ModuleType;
-  onModuleChange: (module: ModuleType) => void;
+export interface MenuItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
 }
 
-const menuGroups = [
+export interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+}
+
+interface SidebarProps {
+  activeModule: string;
+  onModuleChange: (module: string) => void;
+  menuGroups?: MenuGroup[];
+}
+
+const defaultMenuGroups: MenuGroup[] = [
   {
     label: "Main",
     items: [
-      { id: "dashboard" as const, label: "Dashboard", icon: LayoutGrid },
-      { id: "products" as const, label: "Products", icon: Package },
-      { id: "sales" as const, label: "Sales", icon: ShoppingCart },
+      { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
+      { id: "products", label: "Products", icon: Package },
+      { id: "sales", label: "Sales", icon: ShoppingCart },
     ]
   },
   {
     label: "Finance",
     items: [
-      { id: "cash-tracking" as const, label: "Cash Tracking", icon: Banknote },
-      { id: "expenses" as const, label: "Expenses", icon: Receipt },
+      { id: "cash-tracking", label: "Cash Tracking", icon: Banknote },
+      { id: "expenses", label: "Expenses", icon: Receipt },
     ]
   },
   {
     label: "Resources",
     items: [
-      { id: "documents" as const, label: "Documents", icon: FileText },
-      { id: "reports" as const, label: "Reports", icon: TrendingUp },
+      { id: "documents", label: "Documents", icon: FileText },
+      { id: "reports", label: "Reports", icon: TrendingUp },
     ]
   },
   {
     label: "System",
     items: [
-      { id: "staff" as const, label: "Staff", icon: UserCheck },
-      { id: "settings" as const, label: "Settings", icon: SettingsIcon },
+      { id: "staff", label: "Staff", icon: UserCheck },
+      { id: "settings", label: "Settings", icon: SettingsIcon },
     ]
   }
 ];
 
-export function Sidebar({ activeModule, onModuleChange }: SidebarProps) {
+export function Sidebar({ activeModule, onModuleChange, menuGroups = defaultMenuGroups }: SidebarProps) {
   return (
     <div className="w-64 bg-white dark:bg-[#1a1a1a] border-r border-gray-100 dark:border-white/5 flex flex-col h-full shadow-sm">
       <div className="p-4">

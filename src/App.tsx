@@ -10,7 +10,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 
 import { StaffLoginForm } from "./features/auth/StaffLoginForm";
-import { StaffDashboard } from "./features/staff/StaffDashboard";
+import { StaffDashboardLayout } from "./features/staff/StaffDashboardLayout";
 import { StaffDashboardSkeleton } from "./features/staff/StaffDashboardSkeleton";
 import NotFound from "./pages/NotFound";
 
@@ -77,17 +77,33 @@ function AppContent() {
           </div>
         } />
 
-        <Route path="/staff/dashboard" element={
+        <Route path="/staff/*" element={
           staffUser ? (
-            <StaffDashboard
-              staffUser={staffUser}
-              onLogout={() => {
-                localStorage.removeItem('staff_session_token');
-                setStaffToken(null);
-                setStaffUser(null);
-                navigate('/staff/login');
-              }}
-            />
+            <Routes>
+              <Route path="dashboard" element={
+                <StaffDashboardLayout
+                  staffUser={staffUser}
+                  onLogout={() => {
+                    localStorage.removeItem('staff_session_token');
+                    setStaffToken(null);
+                    setStaffUser(null);
+                    navigate('/staff/login');
+                  }}
+                />
+              } />
+              <Route path=":module" element={
+                <StaffDashboardLayout
+                  staffUser={staffUser}
+                  onLogout={() => {
+                    localStorage.removeItem('staff_session_token');
+                    setStaffToken(null);
+                    setStaffUser(null);
+                    navigate('/staff/login');
+                  }}
+                />
+              } />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
+            </Routes>
           ) : (
             <Navigate to="/staff/login" replace />
           )

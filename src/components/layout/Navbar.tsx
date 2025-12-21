@@ -1,4 +1,4 @@
-import { UserCircle, Menu } from "lucide-react";
+import { UserCircle, Menu, LogOut } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "../ThemeProvider";
 import { useQuery } from "convex/react";
@@ -7,9 +7,26 @@ import { useState, useRef, useEffect } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useNavigate } from "react-router-dom";
 
-export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
+export interface NavbarProps {
+    onMenuClick?: () => void;
+    user?: {
+        name?: string;
+        fullName?: string;
+        email?: string;
+        imageUrl?: string;
+        id?: string;
+    } | null;
+    onLogout?: () => void;
+    showProfileLink?: boolean;
+}
+
+export function Navbar({ onMenuClick, user: providedUser, onLogout: providedOnLogout, showProfileLink = true }: NavbarProps) {
     const { theme, toggleTheme } = useTheme();
-    const user = useQuery(api.auth.loggedInUser);
+
+    // Only fetch if no user is provided
+    const fetchedUser = useQuery(api.auth.loggedInUser);
+    const user = providedUser ?? fetchedUser;
+
     const { signOut } = useAuthActions();
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -31,16 +48,24 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
     const handleViewProfile = () => {
         setDropdownOpen(false);
-        navigate("/settings");
+        if (providedUser) {
+            navigate("/staff/settings");
+        } else {
+            navigate("/settings");
+        }
     };
 
     const handleLogout = () => {
         setDropdownOpen(false);
-        void signOut();
+        if (providedOnLogout) {
+            providedOnLogout();
+        } else {
+            void signOut();
+        }
     };
 
     // Get user's full name or fallback
-    const fullName = user?.fullName || user?.name || user?.businessName || "User";
+    const fullName = user?.fullName || user?.name || (user as any)?.businessName || "User";
 
     // Extract initials from the full name
     const getInitials = (name: string) => {

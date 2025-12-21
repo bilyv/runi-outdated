@@ -18,9 +18,25 @@ export const list = query({
     },
 });
 
+export const checkEmailExists = query({
+    args: { email: v.string() },
+    handler: async (ctx, args) => {
+        const staff = await ctx.db
+            .query("staff")
+            .withIndex("by_email", (q) => q.eq("email_address", args.email))
+            .unique();
+        return !!staff;
+    },
+});
+
+export const generateUploadUrl = mutation(async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+});
+
 export const create = mutation({
     args: {
         staff_full_name: v.string(),
+        email_address: v.string(),
         phone_number: v.string(),
         id_card_front_url: v.string(),
         id_card_back_url: v.string(),
@@ -30,10 +46,18 @@ export const create = mutation({
         const userId = await getAuthUserId(ctx);
         if (!userId) throw new Error("Not authenticated");
 
+        // Check if email already exists
+        const existing = await ctx.db
+            .query("staff")
+            .withIndex("by_email", (q) => q.eq("email_address", args.email_address))
+            .unique();
+        if (existing) throw new Error("Staff member with this email already exists");
+
         const staffId = await ctx.db.insert("staff", {
             staff_id: `staff_${Date.now()}`,
             user_id: userId,
             staff_full_name: args.staff_full_name,
+            email_address: args.email_address,
             phone_number: args.phone_number,
             id_card_front_url: args.id_card_front_url,
             id_card_back_url: args.id_card_back_url,
@@ -43,6 +67,13 @@ export const create = mutation({
         });
 
         return staffId;
+    },
+});
+
+export const getStorageUrl = query({
+    args: { storageId: v.id("_storage") },
+    handler: async (ctx, args) => {
+        return await ctx.storage.getUrl(args.storageId);
     },
 });
 

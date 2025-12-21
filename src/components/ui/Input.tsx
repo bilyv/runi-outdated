@@ -1,11 +1,12 @@
-import { InputHTMLAttributes } from "react";
+import React, { InputHTMLAttributes } from "react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  icon?: React.ReactNode;
 }
 
-export function Input({ label, error, className = "", ...props }: InputProps) {
+export function Input({ label, error, icon, className = "", ...props }: InputProps) {
   return (
     <div className="w-full">
       {label && (
@@ -13,14 +14,20 @@ export function Input({ label, error, className = "", ...props }: InputProps) {
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative group">
+        {icon && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+            {icon}
+          </div>
+        )}
         <input
           className={`
-            w-full px-4 py-3 bg-gray-50/50 dark:bg-dark-bg/50 
+            w-full bg-gray-50/50 dark:bg-dark-bg/50 
             border border-gray-200 dark:border-dark-border 
             rounded-2xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
             dark:text-dark-text transition-all duration-300 outline-none
             font-display tracking-tight placeholder:text-gray-400
+            ${icon ? "pl-11 pr-4 py-3" : "px-4 py-3"}
             ${error ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : ""} 
             ${className}
           `}

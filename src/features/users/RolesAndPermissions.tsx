@@ -41,7 +41,7 @@ export function RolesAndPermissions() {
   const staff = useQuery(api.staff.list);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("product");
-  const [activeSubTab, setActiveSubTab] = useState<string>("inventory");
+  const [activeSubTab, setActiveSubTab] = useState<string>("categories");
   const [searchQuery, setSearchQuery] = useState("");
 
   const selectedStaff = staff?.find(s => s._id === selectedStaffId);
@@ -54,19 +54,27 @@ export function RolesAndPermissions() {
       icon: Package,
       subGroups: [
         {
-          id: "inventory",
-          label: "Inventory",
+          id: "categories",
+          label: "Categories",
           permissions: [
-            { id: "p1", name: "View Inventory", description: "Allow staff to see product list and stock levels", enabled: true },
+            { id: "p4_add", name: "Add Category", description: "Allow staff to create new product categories", enabled: true },
+            { id: "p4_edit", name: "Edit Category", description: "Allow staff to modify existing product categories", enabled: true },
+            { id: "p4_delete", name: "Delete Category", description: "Allow staff to remove product categories", enabled: false },
           ]
         },
         {
-          id: "management",
-          label: "Management",
+          id: "product-adding",
+          label: "Product Adding",
           permissions: [
-            { id: "p2", name: "Add Products", description: "Allow staff to create new product entries", enabled: false },
-            { id: "p3", name: "Edit Products", description: "Allow staff to modify existing product details", enabled: false },
-            { id: "p4", name: "Manage Categories", description: "Allow staff to create and edit product categories", enabled: true },
+            { id: "p2", name: "Adding Only", description: "Allow staff to only create new product entries", enabled: false },
+          ]
+        },
+        {
+          id: "live-stock",
+          label: "Live Stock",
+          permissions: [
+            { id: "p1_edit", name: "Edit Stock", description: "Allow staff to modify stock levels", enabled: true },
+            { id: "p1_delete", name: "Delete Stock Entry", description: "Allow staff to remove stock entries", enabled: false },
           ]
         }
       ]
@@ -77,19 +85,19 @@ export function RolesAndPermissions() {
       icon: ShoppingCart,
       subGroups: [
         {
-          id: "operations",
-          label: "Operations",
+          id: "manage-sales",
+          label: "Manage Sales",
           permissions: [
-            { id: "s1", name: "Process Sales", description: "Allow staff to use the POS and create orders", enabled: true },
-            { id: "s4", name: "View Sales History", description: "Allow staff to view past sales records", enabled: true },
+            { id: "s1_edit", name: "Edit Sales Config", description: "Allow staff to modify sales configurations", enabled: true },
+            { id: "s1_delete", name: "Delete Sales Config", description: "Allow staff to remove sales configurations", enabled: false },
           ]
         },
         {
-          id: "management",
-          label: "Management",
+          id: "audit-sales",
+          label: "Audit Sales",
           permissions: [
-            { id: "s2", name: "Apply Discounts", description: "Allow staff to apply custom discounts to orders", enabled: false },
-            { id: "s3", name: "Issue Refunds", description: "Allow staff to process order returns and refunds", enabled: false },
+            { id: "s4_confirm", name: "Confirm Sale", description: "Allow staff to confirm and validate sales", enabled: true },
+            { id: "s4_reject", name: "Reject Sale", description: "Allow staff to reject or cancel sales", enabled: false },
           ]
         }
       ]

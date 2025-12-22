@@ -238,3 +238,72 @@ export const logout = mutation({
         });
     },
 });
+export const getStaffPermissions = query({
+    args: { staffId: v.id("staff") },
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+        if (!userId) return [];
+
+        return await ctx.db
+            .query("staff_permissions")
+            .withIndex("by_staff", (q) => q.eq("staff_id", args.staffId))
+            .collect();
+    },
+});
+
+export const getStaffPermissionsByToken = query({
+    args: { token: v.string() },
+    handler: async (ctx, args) => {
+        const staff = await ctx.db
+            .query("staff")
+            .filter((q) => q.eq(q.field("session_token"), args.token))
+            .first();
+
+        if (!staff) return [];
+
+        return await ctx.db
+            .query("staff_permissions")
+            .withIndex("by_staff", (q) => q.eq("staff_id", staff._id))
+            .collect();
+    },
+});
+
+export const updateStaffPermission = mutation({
+    args: {
+        staffId: v.id("staff"),
+        permissionKey: v.string(),
+        isEnabled: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        const userId = await getAuthUserId(ctx);
+        if (!userId) throw new Error("Not authenticated");
+
+        // Verify admin owns this staff member
+        const staff = await ctx.db.get(args.staffId);
+        if (!staff || staff.user_id !== userId) {
+            throw new Error("Access denied");
+        }
+
+        const existing = await ctx.db
+            .query("staff_permissions")
+            .withIndex("by_staff_key", (q) =>
+                q.eq("staff_id", args.staffId).eq("permission_key", args.permissionKey)
+            )
+            .unique();
+
+        if (existing) {
+            await ctx.db.patch(existing._id, {
+                is_enabled: args.isEnabled,
+                updated_at: Date.now(),
+            });
+        } else {
+            await ctx.db.insert("staff_permissions", {
+                staff_id: args.staffId,
+                user_id: userId,
+                permission_key: args.permissionKey,
+                is_enabled: args.isEnabled,
+                updated_at: Date.now(),
+            });
+        }
+    },
+});

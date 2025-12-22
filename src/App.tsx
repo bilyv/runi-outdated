@@ -83,6 +83,7 @@ function AppContent() {
               <Route path="dashboard" element={
                 <StaffDashboardLayout
                   staffUser={staffUser}
+                  staffToken={staffToken}
                   onLogout={() => {
                     localStorage.removeItem('staff_session_token');
                     setStaffToken(null);
@@ -94,6 +95,7 @@ function AppContent() {
               <Route path=":module" element={
                 <StaffDashboardLayout
                   staffUser={staffUser}
+                  staffToken={staffToken}
                   onLogout={() => {
                     localStorage.removeItem('staff_session_token');
                     setStaffToken(null);

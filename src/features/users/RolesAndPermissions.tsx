@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import {
   Users,
   Package,
@@ -39,20 +40,33 @@ interface PermissionGroup {
 
 export function RolesAndPermissions() {
   const staff = useQuery(api.staff.list);
-  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<Id<"staff"> | null>(null);
   const [activeTab, setActiveTab] = useState<string>("product");
   const [activeSubTab, setActiveSubTab] = useState<string>("categories");
   const [searchQuery, setSearchQuery] = useState("");
-  const [groupMasterStatus, setGroupMasterStatus] = useState<Record<string, boolean>>({
-    "product": true,
-    "sales": true,
-    "cash-tracking": true
-  });
+
+  const staffPermissions = useQuery(api.staff.getStaffPermissions, selectedStaffId ? { staffId: selectedStaffId } : "skip");
+  const updatePermission = useMutation(api.staff.updateStaffPermission);
+
+  const permissionsMap = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    staffPermissions?.forEach(p => {
+      map[p.permission_key] = p.is_enabled;
+    });
+    return map;
+  }, [staffPermissions]);
+
+  const groupMasterStatus = useMemo(() => {
+    return {
+      "product": !!permissionsMap["main_product"],
+      "sales": !!permissionsMap["main_sales"],
+      "cash-tracking": !!permissionsMap["main_cash-tracking"]
+    } as Record<string, boolean>;
+  }, [permissionsMap]);
 
   const selectedStaff = staff?.find(s => s._id === selectedStaffId);
 
-  // Hardcoded UI implementation of permissions
-  const [permissionGroups, setPermissionGroups] = useState<PermissionGroup[]>([
+  const permissionGroups = useMemo<PermissionGroup[]>(() => [
     {
       id: "product",
       label: "Product",
@@ -62,27 +76,27 @@ export function RolesAndPermissions() {
           id: "categories",
           label: "Categories",
           permissions: [
-            { id: "p4_view", name: "View Category", description: "Allow staff to see product categories", enabled: true },
-            { id: "p4_add", name: "Add Category", description: "Allow staff to create new product categories", enabled: true },
-            { id: "p4_edit", name: "Edit Category", description: "Allow staff to modify existing product categories", enabled: true },
-            { id: "p4_delete", name: "Delete Category", description: "Allow staff to remove product categories", enabled: false },
+            { id: "p4_view", name: "View Category", description: "Allow staff to see product categories", enabled: !!permissionsMap["p4_view"] },
+            { id: "p4_add", name: "Add Category", description: "Allow staff to create new product categories", enabled: !!permissionsMap["p4_add"] },
+            { id: "p4_edit", name: "Edit Category", description: "Allow staff to modify existing product categories", enabled: !!permissionsMap["p4_edit"] },
+            { id: "p4_delete", name: "Delete Category", description: "Allow staff to remove product categories", enabled: !!permissionsMap["p4_delete"] },
           ]
         },
         {
           id: "product-adding",
           label: "Product Adding",
           permissions: [
-            { id: "p2_view", name: "View Product List", description: "Allow staff to see all product entries", enabled: true },
-            { id: "p2", name: "Adding Only", description: "Allow staff to only create new product entries", enabled: false },
+            { id: "p2_view", name: "View Product List", description: "Allow staff to see all product entries", enabled: !!permissionsMap["p2_view"] },
+            { id: "p2", name: "Adding Only", description: "Allow staff to only create new product entries", enabled: !!permissionsMap["p2"] },
           ]
         },
         {
           id: "live-stock",
           label: "Live Stock",
           permissions: [
-            { id: "p1_view", name: "View Stock", description: "Allow staff to see current stock levels", enabled: true },
-            { id: "p1_edit", name: "Edit Stock", description: "Allow staff to modify stock levels", enabled: true },
-            { id: "p1_delete", name: "Delete Stock Entry", description: "Allow staff to remove stock entries", enabled: false },
+            { id: "p1_view", name: "View Stock", description: "Allow staff to see current stock levels", enabled: !!permissionsMap["p1_view"] },
+            { id: "p1_edit", name: "Edit Stock", description: "Allow staff to modify stock levels", enabled: !!permissionsMap["p1_edit"] },
+            { id: "p1_delete", name: "Delete Stock Entry", description: "Allow staff to remove stock entries", enabled: !!permissionsMap["p1_delete"] },
           ]
         }
       ]
@@ -96,18 +110,18 @@ export function RolesAndPermissions() {
           id: "manage-sales",
           label: "Manage Sales",
           permissions: [
-            { id: "s1_view", name: "View Sales Config", description: "Allow staff to see sales configurations", enabled: true },
-            { id: "s1_edit", name: "Edit Sales Config", description: "Allow staff to modify sales configurations", enabled: true },
-            { id: "s1_delete", name: "Delete Sales Config", description: "Allow staff to remove sales configurations", enabled: false },
+            { id: "s1_view", name: "View Sales Config", description: "Allow staff to see sales configurations", enabled: !!permissionsMap["s1_view"] },
+            { id: "s1_edit", name: "Edit Sales Config", description: "Allow staff to modify sales configurations", enabled: !!permissionsMap["s1_edit"] },
+            { id: "s1_delete", name: "Delete Sales Config", description: "Allow staff to remove sales configurations", enabled: !!permissionsMap["s1_delete"] },
           ]
         },
         {
           id: "audit-sales",
           label: "Audit Sales",
           permissions: [
-            { id: "s4_view", name: "View Sales Audit", description: "Allow staff to see sales validation history", enabled: true },
-            { id: "s4_confirm", name: "Confirm Sale", description: "Allow staff to confirm and validate sales", enabled: true },
-            { id: "s4_reject", name: "Reject Sale", description: "Allow staff to reject or cancel sales", enabled: false },
+            { id: "s4_view", name: "View Sales Audit", description: "Allow staff to see sales validation history", enabled: !!permissionsMap["s4_view"] },
+            { id: "s4_confirm", name: "Confirm Sale", description: "Allow staff to confirm and validate sales", enabled: !!permissionsMap["s4_confirm"] },
+            { id: "s4_reject", name: "Reject Sale", description: "Allow staff to reject or cancel sales", enabled: !!permissionsMap["s4_reject"] },
           ]
         }
       ]
@@ -121,34 +135,45 @@ export function RolesAndPermissions() {
           id: "deposited",
           label: "Deposited",
           permissions: [
-            { id: "c1_view", name: "View Deposited", description: "Allow staff to see deposited cash records", enabled: true },
-            { id: "c1_create", name: "Create Deposition", description: "Allow staff to record new cash depositions", enabled: true },
-            { id: "c1_edit", name: "Edit Deposited", description: "Allow staff to modify deposited cash records", enabled: true },
-            { id: "c1_delete", name: "Delete Deposited", description: "Allow staff to remove deposited cash records", enabled: false },
+            { id: "c1_view", name: "View Deposited", description: "Allow staff to see deposited cash records", enabled: !!permissionsMap["c1_view"] },
+            { id: "c1_create", name: "Create Deposition", description: "Allow staff to record new cash depositions", enabled: !!permissionsMap["c1_create"] },
+            { id: "c1_edit", name: "Edit Deposited", description: "Allow staff to modify deposited cash records", enabled: !!permissionsMap["c1_edit"] },
+            { id: "c1_delete", name: "Delete Deposited", description: "Allow staff to remove deposited cash records", enabled: !!permissionsMap["c1_delete"] },
           ]
         },
         {
           id: "debtor",
           label: "Debtor",
           permissions: [
-            { id: "c2_view", name: "View Debtors", description: "Allow staff to see the list of debtors", enabled: true },
+            { id: "c2_view", name: "View Debtors", description: "Allow staff to see the list of debtors", enabled: !!permissionsMap["c2_view"] },
           ]
         }
       ]
     }
-  ]);
+  ], [permissionsMap]);
 
   const [nudgeViewId, setNudgeViewId] = useState<string | null>(null);
 
-  const toggleGroupMaster = (groupId: string, e?: React.MouseEvent) => {
+  const toggleGroupMaster = async (groupId: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    setGroupMasterStatus(prev => ({
-      ...prev,
-      [groupId]: !prev[groupId]
-    }));
+    if (!selectedStaffId) return;
+
+    const newStatus = !groupMasterStatus[groupId];
+    const permissionKey = `main_${groupId}`;
+
+    try {
+      await updatePermission({
+        staffId: selectedStaffId,
+        permissionKey,
+        isEnabled: newStatus
+      });
+    } catch (error) {
+      console.error("Failed to update master permission:", error);
+    }
   };
 
-  const togglePermission = (groupId: string, subGroupId: string, permissionId: string) => {
+  const togglePermission = async (groupId: string, subGroupId: string, permissionId: string) => {
+    if (!selectedStaffId) return;
     if (!groupMasterStatus[groupId]) return;
 
     const subGroup = permissionGroups.find(g => g.id === groupId)?.subGroups.find(sg => sg.id === subGroupId);
@@ -164,36 +189,30 @@ export function RolesAndPermissions() {
       return;
     }
 
-    setPermissionGroups(groups => groups.map(group => {
-      if (group.id === groupId) {
-        return {
-          ...group,
-          subGroups: group.subGroups.map(subGroup => {
-            if (subGroup.id === subGroupId) {
-              const currentPermission = subGroup.permissions.find(p => p.id === permissionId);
-              const willBeEnabled = !currentPermission?.enabled;
+    const currentPermission = subGroup?.permissions.find(p => p.id === permissionId);
+    const willBeEnabled = !currentPermission?.enabled;
 
-              // If we're turning OFF a "View" permission, turn off all others in this subgroup
-              if (isView && !willBeEnabled) {
-                return {
-                  ...subGroup,
-                  permissions: subGroup.permissions.map(p => ({ ...p, enabled: false }))
-                };
-              }
-
-              return {
-                ...subGroup,
-                permissions: subGroup.permissions.map(p =>
-                  p.id === permissionId ? { ...p, enabled: willBeEnabled } : p
-                )
-              };
-            }
-            return subGroup;
+    try {
+      // If we're turning OFF a "View" permission, turn off all others in this subgroup
+      if (isView && !willBeEnabled) {
+        const promises = subGroup?.permissions.map(p =>
+          updatePermission({
+            staffId: selectedStaffId,
+            permissionKey: p.id,
+            isEnabled: false
           })
-        };
+        ) || [];
+        await Promise.all(promises);
+      } else {
+        await updatePermission({
+          staffId: selectedStaffId,
+          permissionKey: permissionId,
+          isEnabled: willBeEnabled
+        });
       }
-      return group;
-    }));
+    } catch (error) {
+      console.error("Failed to update permission:", error);
+    }
   };
 
   const isSubGroupEnabled = (subGroup: PermissionSubGroup) => {
@@ -321,12 +340,7 @@ export function RolesAndPermissions() {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">Configure access permissions</p>
                 </div>
                 <div className="hidden md:flex gap-2">
-                  <button className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors">
-                    Reset
-                  </button>
-                  <button className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
-                    Save
-                  </button>
+                  <p className="text-xs text-gray-400 italic flex items-center px-4">Changes saved automatically</p>
                 </div>
               </div>
 
@@ -533,12 +547,9 @@ export function RolesAndPermissions() {
 
               {/* Mobile Floating Actions */}
               <div className="md:hidden fixed bottom-4 left-4 right-4 flex gap-2 z-20">
-                <button className="flex-1 py-3 text-sm font-medium bg-white dark:bg-dark-card border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl shadow-lg">
-                  Reset
-                </button>
-                <button className="flex-1 py-3 text-sm font-medium bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
-                  Save Changes
-                </button>
+                <div className="w-full py-3 text-center text-xs font-medium bg-white/80 dark:bg-dark-card/80 backdrop-blur-md border border-gray-200 dark:border-white/10 text-gray-500 rounded-xl shadow-lg">
+                  Changes take effect immediately
+                </div>
               </div>
             </div>
           ) : (

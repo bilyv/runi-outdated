@@ -43,6 +43,11 @@ export function RolesAndPermissions() {
   const [activeTab, setActiveTab] = useState<string>("product");
   const [activeSubTab, setActiveSubTab] = useState<string>("categories");
   const [searchQuery, setSearchQuery] = useState("");
+  const [groupMasterStatus, setGroupMasterStatus] = useState<Record<string, boolean>>({
+    "product": true,
+    "sales": true,
+    "cash-tracking": true
+  });
 
   const selectedStaff = staff?.find(s => s._id === selectedStaffId);
 
@@ -135,7 +140,17 @@ export function RolesAndPermissions() {
 
   const [nudgeViewId, setNudgeViewId] = useState<string | null>(null);
 
+  const toggleGroupMaster = (groupId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setGroupMasterStatus(prev => ({
+      ...prev,
+      [groupId]: !prev[groupId]
+    }));
+  };
+
   const togglePermission = (groupId: string, subGroupId: string, permissionId: string) => {
+    if (!groupMasterStatus[groupId]) return;
+
     const subGroup = permissionGroups.find(g => g.id === groupId)?.subGroups.find(sg => sg.id === subGroupId);
     const viewPermission = subGroup?.permissions.find(p => p.id.includes("_view"));
     const isView = permissionId.includes("_view");
@@ -321,32 +336,69 @@ export function RolesAndPermissions() {
                   {permissionGroups.map((group) => {
                     const Icon = group.icon;
                     const isGroupActive = group.subGroups.some(isSubGroupEnabled);
+                    const isGroupMasterOn = groupMasterStatus[group.id];
+
                     return (
-                      <button
-                        key={group.id}
-                        onClick={() => {
-                          setActiveTab(group.id);
-                          setActiveSubTab(group.subGroups[0].id);
-                        }}
-                        className={cn(
-                          "flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap",
-                          activeTab === group.id
-                            ? "bg-white dark:bg-white/10 text-primary shadow-sm"
-                            : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white",
-                          !isGroupActive && "opacity-40 grayscale-[0.5]"
-                        )}
-                      >
-                        <Icon className={cn("w-4 h-4", activeTab === group.id ? "text-primary" : "text-gray-400")} />
-                        {group.label}
-                        {activeTab === group.id && (
-                          <motion.div
-                            layoutId="activeTabGlow"
-                            className="absolute inset-0 rounded-xl bg-primary/5 dark:bg-primary/10"
-                            initial={false}
-                            transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                          />
-                        )}
-                      </button>
+                      <div key={group.id} className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setActiveTab(group.id);
+                            setActiveSubTab(group.subGroups[0].id);
+                          }}
+                          className={cn(
+                            "group/tab flex items-center gap-3 px-5 py-3 rounded-2xl text-sm font-semibold transition-all relative overflow-hidden",
+                            activeTab === group.id
+                              ? "bg-white dark:bg-white/10 text-primary shadow-md shadow-primary/5 border border-primary/10"
+                              : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white border border-transparent",
+                            (!isGroupActive || !isGroupMasterOn) && "opacity-50 grayscale-[0.3]"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-8 h-8 rounded-xl flex items-center justify-center transition-colors",
+                            activeTab === group.id ? "bg-primary/10" : "bg-gray-100 dark:bg-white/5"
+                          )}>
+                            <Icon className={cn("w-4.5 h-4.5", activeTab === group.id ? "text-primary" : "text-gray-400")} />
+                          </div>
+                          <span className="relative z-10">{group.label}</span>
+
+                          {activeTab === group.id && (
+                            <motion.div
+                              layoutId="activeTabGlow"
+                              className="absolute inset-0 bg-primary/[0.03] dark:bg-primary/[0.08]"
+                              initial={false}
+                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                          )}
+                        </button>
+
+                        {/* Improved Group Master Switch */}
+                        <div className={cn(
+                          "flex items-center gap-2 px-2.5 py-1.5 rounded-full transition-all",
+                          isGroupMasterOn
+                            ? "bg-primary/5 dark:bg-primary/10 border border-primary/10"
+                            : "bg-gray-100 dark:bg-white/5 border border-transparent opacity-60"
+                        )}>
+                          <span className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider",
+                            isGroupMasterOn ? "text-primary" : "text-gray-400"
+                          )}>
+                            {isGroupMasterOn ? "Active" : "Off"}
+                          </span>
+                          <button
+                            onClick={(e) => toggleGroupMaster(group.id, e)}
+                            className={cn(
+                              "w-8 h-4 rounded-full p-0.5 transition-all duration-300 relative flex items-center shrink-0",
+                              isGroupMasterOn ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.3)]" : "bg-gray-300 dark:bg-white/20"
+                            )}
+                          >
+                            <motion.div
+                              animate={{ x: isGroupMasterOn ? 16 : 0 }}
+                              transition={{ type: "spring", stiffness: 600, damping: 30 }}
+                              className="w-3 h-3 bg-white rounded-full shadow-sm"
+                            />
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -358,6 +410,8 @@ export function RolesAndPermissions() {
                 <div className="flex border-b border-gray-100 dark:border-white/5 mb-6">
                   {permissionGroups.find(g => g.id === activeTab)?.subGroups.map((subGroup) => {
                     const isTabActive = isSubGroupEnabled(subGroup);
+                    const isGroupMasterOn = groupMasterStatus[activeTab];
+
                     return (
                       <button
                         key={subGroup.id}
@@ -367,7 +421,7 @@ export function RolesAndPermissions() {
                           activeSubTab === subGroup.id
                             ? "border-primary text-primary"
                             : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
-                          !isTabActive && "opacity-40 grayscale-[0.5]"
+                          (!isTabActive || !isGroupMasterOn) && "opacity-40 grayscale-[0.5]"
                         )}
                       >
                         {subGroup.label}
@@ -391,10 +445,10 @@ export function RolesAndPermissions() {
                     {(() => {
                       const currentSubGroup = permissionGroups.find(g => g.id === activeTab)?.subGroups.find(sg => sg.id === activeSubTab);
                       const viewEnabled = currentSubGroup?.permissions.find(p => p.id.includes("_view"))?.enabled;
-
                       return currentSubGroup?.permissions.map((permission) => {
                         const isView = permission.id.includes("_view");
                         const isNudged = nudgeViewId === permission.id;
+                        const isOverallDisabled = !groupMasterStatus[activeTab];
 
                         return (
                           <div
@@ -404,7 +458,8 @@ export function RolesAndPermissions() {
                               permission.enabled
                                 ? "bg-white dark:bg-white/5 border-primary/20 shadow-sm"
                                 : "bg-gray-50/50 dark:bg-white/[0.02] border-gray-100 dark:border-white/5",
-                              !isView && !viewEnabled && "opacity-60 saturate-[0.8] brightness-[0.9]",
+                              (!isView && !viewEnabled || isOverallDisabled) && "opacity-60 saturate-[0.8] brightness-[0.9]",
+                              isOverallDisabled && "cursor-not-allowed opacity-40 grayscale pointer-events-none",
                               isNudged && "ring-2 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse"
                             )}
                             onClick={() => togglePermission(activeTab, activeSubTab, permission.id)}

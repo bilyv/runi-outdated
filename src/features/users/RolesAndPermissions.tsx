@@ -24,17 +24,24 @@ interface Permission {
   enabled: boolean;
 }
 
+interface PermissionSubGroup {
+  id: string;
+  label: string;
+  permissions: Permission[];
+}
+
 interface PermissionGroup {
   id: string;
   label: string;
   icon: any;
-  permissions: Permission[];
+  subGroups: PermissionSubGroup[];
 }
 
 export function RolesAndPermissions() {
   const staff = useQuery(api.staff.list);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("product");
+  const [activeSubTab, setActiveSubTab] = useState<string>("inventory");
   const [searchQuery, setSearchQuery] = useState("");
 
   const selectedStaff = staff?.find(s => s._id === selectedStaffId);
@@ -45,56 +52,112 @@ export function RolesAndPermissions() {
       id: "product",
       label: "Product",
       icon: Package,
-      permissions: [
-        { id: "p1", name: "View Inventory", description: "Allow staff to see product list and stock levels", enabled: true },
-        { id: "p2", name: "Add Products", description: "Allow staff to create new product entries", enabled: false },
-        { id: "p3", name: "Edit Products", description: "Allow staff to modify existing product details", enabled: false },
-        { id: "p4", name: "Manage Categories", description: "Allow staff to create and edit product categories", enabled: true },
+      subGroups: [
+        {
+          id: "inventory",
+          label: "Inventory",
+          permissions: [
+            { id: "p1", name: "View Inventory", description: "Allow staff to see product list and stock levels", enabled: true },
+          ]
+        },
+        {
+          id: "management",
+          label: "Management",
+          permissions: [
+            { id: "p2", name: "Add Products", description: "Allow staff to create new product entries", enabled: false },
+            { id: "p3", name: "Edit Products", description: "Allow staff to modify existing product details", enabled: false },
+            { id: "p4", name: "Manage Categories", description: "Allow staff to create and edit product categories", enabled: true },
+          ]
+        }
       ]
     },
     {
       id: "sales",
       label: "Sales",
       icon: ShoppingCart,
-      permissions: [
-        { id: "s1", name: "Process Sales", description: "Allow staff to use the POS and create orders", enabled: true },
-        { id: "s2", name: "Apply Discounts", description: "Allow staff to apply custom discounts to orders", enabled: false },
-        { id: "s3", name: "Issue Refunds", description: "Allow staff to process order returns and refunds", enabled: false },
-        { id: "s4", name: "View Sales History", description: "Allow staff to view past sales records", enabled: true },
+      subGroups: [
+        {
+          id: "operations",
+          label: "Operations",
+          permissions: [
+            { id: "s1", name: "Process Sales", description: "Allow staff to use the POS and create orders", enabled: true },
+            { id: "s4", name: "View Sales History", description: "Allow staff to view past sales records", enabled: true },
+          ]
+        },
+        {
+          id: "management",
+          label: "Management",
+          permissions: [
+            { id: "s2", name: "Apply Discounts", description: "Allow staff to apply custom discounts to orders", enabled: false },
+            { id: "s3", name: "Issue Refunds", description: "Allow staff to process order returns and refunds", enabled: false },
+          ]
+        }
       ]
     },
     {
       id: "cash-tracking",
       label: "Cash Tracking",
       icon: LineChart,
-      permissions: [
-        { id: "c1", name: "Open/Close Register", description: "Allow staff to open and close daily cash registers", enabled: true },
-        { id: "c2", name: "View Cash Flows", description: "Allow staff to see all cash movements", enabled: false },
-        { id: "c3", name: "Perform Cash Payouts", description: "Allow staff to record cash leaving the register", enabled: false },
-        { id: "c4", name: "Cash Reconciliation", description: "Allow staff to perform end-of-day cash counts", enabled: true },
+      subGroups: [
+        {
+          id: "register",
+          label: "Register",
+          permissions: [
+            { id: "c1", name: "Open/Close Register", description: "Allow staff to open and close daily cash registers", enabled: true },
+            { id: "c4", name: "Cash Reconciliation", description: "Allow staff to perform end-of-day cash counts", enabled: true },
+          ]
+        },
+        {
+          id: "management",
+          label: "Management",
+          permissions: [
+            { id: "c2", name: "View Cash Flows", description: "Allow staff to see all cash movements", enabled: false },
+            { id: "c3", name: "Perform Cash Payouts", description: "Allow staff to record cash leaving the register", enabled: false },
+          ]
+        }
       ]
     },
     {
       id: "expenses",
       label: "Expenses",
       icon: Wallet,
-      permissions: [
-        { id: "e1", name: "View Expenses", description: "Allow staff to see the list of business expenses", enabled: true },
-        { id: "e2", name: "Record Expenses", description: "Allow staff to log new business expenditures", enabled: false },
-        { id: "e3", name: "Approve Expenses", description: "Allow staff to approve pending expense reports", enabled: false },
-        { id: "e4", name: "Manage Vendors", description: "Allow staff to add or edit vendor information", enabled: true },
+      subGroups: [
+        {
+          id: "general",
+          label: "General",
+          permissions: [
+            { id: "e1", name: "View Expenses", description: "Allow staff to see the list of business expenses", enabled: true },
+          ]
+        },
+        {
+          id: "management",
+          label: "Management",
+          permissions: [
+            { id: "e2", name: "Record Expenses", description: "Allow staff to log new business expenditures", enabled: false },
+            { id: "e3", name: "Approve Expenses", description: "Allow staff to approve pending expense reports", enabled: false },
+            { id: "e4", name: "Manage Vendors", description: "Allow staff to add or edit vendor information", enabled: true },
+          ]
+        }
       ]
     }
   ]);
 
-  const togglePermission = (groupId: string, permissionId: string) => {
+  const togglePermission = (groupId: string, subGroupId: string, permissionId: string) => {
     setPermissionGroups(groups => groups.map(group => {
       if (group.id === groupId) {
         return {
           ...group,
-          permissions: group.permissions.map(p =>
-            p.id === permissionId ? { ...p, enabled: !p.enabled } : p
-          )
+          subGroups: group.subGroups.map(subGroup => {
+            if (subGroup.id === subGroupId) {
+              return {
+                ...subGroup,
+                permissions: subGroup.permissions.map(p =>
+                  p.id === permissionId ? { ...p, enabled: !p.enabled } : p
+                )
+              };
+            }
+            return subGroup;
+          })
         };
       }
       return group;
@@ -239,7 +302,10 @@ export function RolesAndPermissions() {
                     return (
                       <button
                         key={group.id}
-                        onClick={() => setActiveTab(group.id)}
+                        onClick={() => {
+                          setActiveTab(group.id);
+                          setActiveSubTab(group.subGroups[0].id);
+                        }}
                         className={cn(
                           "flex items-center gap-2 px-4 md:px-6 py-2.5 rounded-xl text-sm font-medium transition-all relative whitespace-nowrap",
                           activeTab === group.id
@@ -265,16 +331,34 @@ export function RolesAndPermissions() {
 
               {/* Tab Content */}
               <div className="flex-1 overflow-y-auto -mx-4 px-4 md:mx-0 md:px-0">
+                {/* Sub Tabs */}
+                <div className="flex border-b border-gray-100 dark:border-white/5 mb-6">
+                  {permissionGroups.find(g => g.id === activeTab)?.subGroups.map((subGroup) => (
+                    <button
+                      key={subGroup.id}
+                      onClick={() => setActiveSubTab(subGroup.id)}
+                      className={cn(
+                        "px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                        activeSubTab === subGroup.id
+                          ? "border-primary text-primary"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      )}
+                    >
+                      {subGroup.label}
+                    </button>
+                  ))}
+                </div>
+
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={activeTab}
+                    key={`${activeTab}-${activeSubTab}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                     className="grid grid-cols-1 xl:grid-cols-2 gap-4 pb-20 md:pb-0"
                   >
-                    {permissionGroups.find(g => g.id === activeTab)?.permissions.map((permission) => (
+                    {permissionGroups.find(g => g.id === activeTab)?.subGroups.find(sg => sg.id === activeSubTab)?.permissions.map((permission) => (
                       <div
                         key={permission.id}
                         className={cn(
@@ -283,7 +367,7 @@ export function RolesAndPermissions() {
                             ? "bg-white dark:bg-white/5 border-primary/20 shadow-sm"
                             : "bg-gray-50/50 dark:bg-white/[0.02] border-gray-100 dark:border-white/5"
                         )}
-                        onClick={() => togglePermission(activeTab, permission.id)}
+                        onClick={() => togglePermission(activeTab, activeSubTab, permission.id)}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">

@@ -12,7 +12,7 @@ export function Users() {
 
   const tabs = [
     { id: "all", label: "All Staff" },
-    { id: "roles", label: "Roles & Permissions" },
+    { id: "roles", label: "Permissions" },
   ];
 
   return (

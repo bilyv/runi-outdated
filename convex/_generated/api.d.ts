@@ -18,6 +18,7 @@ import type * as folders from "../folders.js";
 import type * as http from "../http.js";
 import type * as productCategories from "../productCategories.js";
 import type * as products from "../products.js";
+import type * as reports from "../reports.js";
 import type * as router from "../router.js";
 import type * as sales from "../sales.js";
 import type * as settings from "../settings.js";
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   productCategories: typeof productCategories;
   products: typeof products;
+  reports: typeof reports;
   router: typeof router;
   sales: typeof sales;
   settings: typeof settings;

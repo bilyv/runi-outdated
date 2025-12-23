@@ -87,7 +87,10 @@ export function RolesAndPermissions() {
           label: "Product Adding",
           permissions: [
             { id: "p2_view", name: "View Product List", description: "Allow staff to see all product entries", enabled: !!permissionsMap["p2_view"] },
-            { id: "p2", name: "Adding Only", description: "Allow staff to only create new product entries", enabled: !!permissionsMap["p2"] },
+            { id: "p2_add", name: "Add New Product", description: "Allow staff to create new product entries", enabled: !!permissionsMap["p2_add"] },
+            { id: "p2_restock", name: "Restock", description: "Allow staff to add stock to existing products", enabled: !!permissionsMap["p2_restock"] },
+            { id: "p2_damaged", name: "Record Damaged", description: "Allow staff to record damaged stock", enabled: !!permissionsMap["p2_damaged"] },
+            { id: "p2_correct", name: "Stock Correction", description: "Allow staff to manually adjust stock levels", enabled: !!permissionsMap["p2_correct"] },
           ]
         },
         {
@@ -95,8 +98,10 @@ export function RolesAndPermissions() {
           label: "Live Stock",
           permissions: [
             { id: "p1_view", name: "View Stock", description: "Allow staff to see current stock levels", enabled: !!permissionsMap["p1_view"] },
-            { id: "p1_edit", name: "Edit Stock", description: "Allow staff to modify stock levels", enabled: !!permissionsMap["p1_edit"] },
-            { id: "p1_delete", name: "Delete Stock Entry", description: "Allow staff to remove stock entries", enabled: !!permissionsMap["p1_delete"] },
+            { id: "p1_all", name: "All Products", description: "Allow staff to view all inventory items", enabled: !!permissionsMap["p1_all"] },
+            { id: "p1_low", name: "Low Stock", description: "Allow staff to view items with low stock levels", enabled: !!permissionsMap["p1_low"] },
+            { id: "p1_damaged", name: "Damaged Products", description: "Allow staff to view lists of damaged items", enabled: !!permissionsMap["p1_damaged"] },
+            { id: "p1_expiry", name: "Nearing Expiry", description: "Allow staff to view items close to expiration", enabled: !!permissionsMap["p1_expiry"] },
           ]
         }
       ]
@@ -106,6 +111,13 @@ export function RolesAndPermissions() {
       label: "Sales",
       icon: ShoppingCart,
       subGroups: [
+        {
+          id: "add-sale",
+          label: "Add Sale",
+          permissions: [
+            { id: "s5_view", name: "Allow Add Sale", description: "Allow staff to access the sale creation interface", enabled: !!permissionsMap["s5_view"] },
+          ]
+        },
         {
           id: "manage-sales",
           label: "Manage Sales",

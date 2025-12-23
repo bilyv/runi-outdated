@@ -302,6 +302,36 @@ const applicationTables = {
     .index("by_phone", ["phone_number"])
     .index("by_email", ["email_address"]),
 
+  // Permissions
+  permissions: defineTable({
+    // Unique identifier used everywhere (frontend + backend)
+    permission_key: v.string(), 
+    // Example: "sales.manage_sales.edit"
+
+    // UI structure
+    main_tab_key: v.string(), 
+    // Example: "sales", "products", "cash", "expenses"
+
+    sub_tab_key: v.string(),  
+    // Example: "manage_sales", "add_sales", "live_stock"
+
+    action_key: v.string(),   
+    // Example: "create", "view", "edit", "delete"
+
+    // Human-readable label (for admin UI)
+    label: v.string(),        
+    // Example: "Edit Sales Record"
+
+    // Optional description (nice for admin clarity)
+    description: v.optional(v.string()),
+
+    created_at: v.number(),
+  })
+    .index("by_permission_key", ["permission_key"])
+    .index("by_main_tab", ["main_tab_key"])
+    .index("by_main_sub", ["main_tab_key", "sub_tab_key"])
+    .index("by_full_path", ["main_tab_key", "sub_tab_key", "action_key"]),
+
   // Staff Permissions
   staff_permissions: defineTable({
     staff_id: v.id("staff"),      // Foreign Key to the staff table

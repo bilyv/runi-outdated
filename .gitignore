@@ -22,7 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.cursor
 
 
 # Environment variables and sensitive config
